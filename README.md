@@ -2,6 +2,10 @@
 
 A simple, browser-based tool for creating, managing, and organizing text prompts with automatic saving functionality.
 
+Example Usages:
+- Resume + Job Listing + "Reply to this short answer job application question" -> Tailored short answer response for job application
+- Homework Question + Student Solution + "Thoroughly the student's solution for correctness" -> Homework Response Verifier
+
 ## Features
 
 - Create and manage multiple text prompts in a clean interface
