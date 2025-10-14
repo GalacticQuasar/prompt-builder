@@ -18,7 +18,7 @@ Example Usages:
 
 ## Usage
 
-1. Open `prompt-builder.html` in a web browser
+1. Open `index.html` in a web browser
 2. Click "Add Prompt" to create a new text area
 3. Type or paste your prompt text into the text area
 4. Changes are automatically saved to localStorage
@@ -37,7 +37,7 @@ Example Usages:
 ## Getting Started
 
 1. Clone this repository
-2. Open `prompt-builder.html` in your web browser
+2. Open `index.html` in your web browser
 3. Start creating and managing your prompts!
 
 ## Browser Support
