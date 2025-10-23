@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dim">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
     <title>Prompt Builder</title>
   </head>
-  <body class="bg-neutral-800 text-white">
+  <body>
     <main class="container mx-auto p-4 text-center min-h-screen">
         <h1 class="text-2xl font-bold mb-6">Welcome to the Prompt Builder</h1>
-        <div id="save-indicator" class="fixed top-4 right-4 bg-green-500 text-white px-3 py-1 rounded opacity-0 transition-opacity duration-300 text-sm">
-            Saved
+        <div id="save-indicator" role="alert" class="alert alert-success alert-soft fixed top-4 right-4 opacity-0 transition-opacity duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Saved</span>
         </div>
+        <!-- <div id="save-indicator" class="fixed top-4 right-4 bg-success text-white px-3 py-1 rounded opacity-0 transition-opacity duration-300 text-sm">
+            Saved
+        </div> -->
         <div id="copy-indicator" class="fixed top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded opacity-0 transition-opacity duration-300 text-sm">
             Copied to Clipboard
         </div>
         <div id="textarea-list" class="mb-4"></div>
         <div class="flex justify-center gap-2">
-            <button onclick="appendTextarea()" class="bg-blue-500 text-white px-4 py-2 rounded">Add Prompt</button>
-            <button onclick="copyTextToClipboard()" class="bg-green-500 text-white px-4 py-2 rounded">Copy Text</button>
-            <button onclick="clearAllPrompts()" class="bg-red-500 text-white px-4 py-2 rounded">Clear All</button>
+            <button onclick="appendTextarea()" class="btn btn-primary">Add Prompt</button>
+            <button onclick="copyTextToClipboard()" class="btn btn-accent">Copy Text</button>
+            <button onclick="clearAllPrompts()" class="btn btn-secondary">Clear All</button>
         </div>
     </main>
     
@@ -70,7 +78,7 @@
             const textarea = document.createElement('textarea');
             textarea.rows = 4;
             textarea.cols = 50;
-            textarea.className = 'bg-neutral-700 rounded-lg border p-2 w-[900px]';
+            textarea.className = 'textarea focus:outline-none w-[900px]';
             textarea.value = initialText;
             
             // Add event listener to save to localStorage whenever content changes
@@ -78,7 +86,7 @@
             
             const deleteButton = document.createElement('button');
             deleteButton.innerHTML = '×';
-            deleteButton.className = 'bg-red-500 text-white px-3 rounded hover:bg-red-600 self-stretch flex items-center';
+            deleteButton.className = 'btn btn-secondary text-white';
             deleteButton.onclick = function() {
                 container.remove();
                 saveToLocalStorage(); // Save after deletion
