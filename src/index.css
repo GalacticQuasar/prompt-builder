@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: dim;
+}
+
+#textarea-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#textarea-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#textarea-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+#textarea-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+textarea {
+  min-height: 100px;
+}
+
+@media (max-width: 768px) {
+  .drawer-side aside {
+    width: 100vw;
+  }
+}
