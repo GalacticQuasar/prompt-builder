@@ -63,7 +63,7 @@ export default function PromptEditor() {
   const sortedSections = prompt.sections.slice().sort((a, b) => a.order - b.order);
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <PromptTabs />
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function PromptEditor() {
 
       <div className="divider my-0"></div>
 
-      <div className="flex-1 overflow-y-auto py-4 space-y-3" id="textarea-list">
+      <div className="py-4 space-y-3" id="textarea-list">
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={sortedSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             {sortedSections.map((section) => (

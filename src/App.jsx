@@ -60,8 +60,8 @@ function AppInner() {
           </div>
         </header>
 
-        <main className="flex-1 container mx-auto p-4 overflow-hidden">
-          <div className="h-full flex flex-col max-w-[900px] mx-auto">
+        <main className="flex-1 container mx-auto p-4">
+          <div className="flex flex-col max-w-[900px] mx-auto">
             <PromptEditor />
           </div>
         </main>

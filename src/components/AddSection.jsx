@@ -29,6 +29,10 @@ export default function AddSection() {
       updatedAt: new Date().toISOString(),
     };
     autoSave(updated);
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
   };
 
   const presets = ['System Prompt', 'Context', 'Instructions', 'Examples', 'Output Format'];
