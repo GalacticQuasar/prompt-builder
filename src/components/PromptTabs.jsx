@@ -1,5 +1,77 @@
 import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
+import ContextMenu from './ContextMenu';
+
+function TabItem({ prompt, index, isActive, promptCount, onSelect, onLabelChange, onDelete }) {
+  const [menu, setMenu] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(prompt.label);
+
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  const startEditing = () => {
+    setText(prompt.label);
+    setEditing(true);
+  };
+
+  const finishEdit = () => {
+    setEditing(false);
+    if (text.trim() && text.trim() !== prompt.label) {
+      onLabelChange(prompt.id, text.trim());
+    } else {
+      setText(prompt.label);
+    }
+  };
+
+  return (
+    <>
+      <div
+        className={`flex items-center gap-1 px-3 py-1.5 rounded-t-lg cursor-pointer text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-base-200 text-primary border-b-2 border-primary'
+            : 'bg-base-300/50 opacity-70 hover:opacity-100'
+        }`}
+        onClick={() => onSelect(index)}
+        onContextMenu={handleContextMenu}
+      >
+        {editing ? (
+          <input
+            type="text"
+            className="input input-xs input-bordered w-24 focus:outline-none"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={finishEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') finishEdit();
+              if (e.key === 'Escape') {
+                setText(prompt.label);
+                setEditing(false);
+              }
+            }}
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className="truncate max-w-32">{prompt.label}</span>
+        )}
+      </div>
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          onRename={startEditing}
+          canDelete={promptCount > 1}
+          onDelete={() => onDelete(index)}
+          onClose={() => setMenu(null)}
+        />
+      )}
+    </>
+  );
+}
 
 export default function PromptTabs() {
   const { state, dispatch, getActiveProject, deleteCurrentPrompt, duplicateCurrentPrompt, autoSave } = useProject();
@@ -28,39 +100,24 @@ export default function PromptTabs() {
     autoSave(updated);
   };
 
+  const handleDelete = (index) => {
+    dispatch({ type: 'SET_ACTIVE_PROMPT_INDEX', payload: index });
+    setTimeout(() => deleteCurrentPrompt(), 0);
+  };
+
   return (
     <div className="flex items-center gap-1 overflow-x-auto pb-2">
       {prompts.map((prompt, index) => (
-        <div
+        <TabItem
           key={prompt.id}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-t-lg cursor-pointer text-sm font-medium transition-colors ${
-            index === state.activePromptIndex
-              ? 'bg-base-200 text-primary border-b-2 border-primary'
-              : 'bg-base-300/50 opacity-70 hover:opacity-100'
-          }`}
-          onClick={() => handleTabClick(index)}
-        >
-          <EditableLabel
-            value={prompt.label}
-            onChange={(val) => handleLabelChange(prompt.id, val)}
-            active={index === state.activePromptIndex}
-          />
-          {prompts.length > 1 && (
-            <button
-              className="btn btn-xs btn-ghost btn-square opacity-50 hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Delete "${prompt.label}"?`)) {
-                  dispatch({ type: 'SET_ACTIVE_PROMPT_INDEX', payload: index });
-                  setTimeout(() => deleteCurrentPrompt(), 0);
-                }
-              }}
-              title="Delete version"
-            >
-              ×
-            </button>
-          )}
-        </div>
+          prompt={prompt}
+          index={index}
+          isActive={index === state.activePromptIndex}
+          promptCount={prompts.length}
+          onSelect={handleTabClick}
+          onLabelChange={handleLabelChange}
+          onDelete={handleDelete}
+        />
       ))}
       <button
         className="btn btn-sm btn-ghost btn-square"
@@ -72,53 +129,5 @@ export default function PromptTabs() {
         </svg>
       </button>
     </div>
-  );
-}
-
-function EditableLabel({ value, onChange, active }) {
-  const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(value);
-
-  if (!active) {
-    return <span className="truncate max-w-32">{value}</span>;
-  }
-
-  if (editing) {
-    return (
-      <input
-        type="text"
-        className="input input-xs input-bordered w-24 focus:outline-none"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          onChange(text);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            setEditing(false);
-            onChange(text);
-          }
-          if (e.key === 'Escape') {
-            setEditing(false);
-          }
-        }}
-        autoFocus
-        onClick={(e) => e.stopPropagation()}
-      />
-    );
-  }
-
-  return (
-    <span
-      className="truncate max-w-32 hover:underline"
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        setEditing(true);
-      }}
-      title="Double-click to rename"
-    >
-      {value}
-    </span>
   );
 }
