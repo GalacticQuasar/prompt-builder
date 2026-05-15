@@ -3,9 +3,9 @@ import { generateId } from '../utils/helpers';
 
 export default function AddSection() {
   const { dispatch, getActiveProject, getActivePrompt } = useProject();
-  const project = getActiveProject();
 
   const handleAdd = (label) => {
+    const project = getActiveProject();
     const prompt = getActivePrompt();
     if (!prompt || !project) return;
 

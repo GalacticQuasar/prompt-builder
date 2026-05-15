@@ -16,7 +16,6 @@
     "@tailwindcss/vite": "^4.3.0",
     "daisyui": "^5.5.19",
     "idb": "^8.0.3",
-    "js-tiktoken": "^1.0.21",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tailwindcss": "^4.3.0"

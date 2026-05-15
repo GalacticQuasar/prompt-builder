@@ -7,6 +7,7 @@ import AddSection from './AddSection';
 import PromptTabs from './PromptTabs';
 import TokenCounter from './TokenCounter';
 import { copyAllSections } from '../utils/clipboard';
+import { getSortedSections } from '../utils/helpers';
 
 export default function PromptEditor() {
   const { dispatch, getActivePrompt, getActiveProject } = useProject();
@@ -53,7 +54,7 @@ export default function PromptEditor() {
     );
   }
 
-  const sortedSections = prompt.sections.slice().sort((a, b) => a.order - b.order);
+  const sortedSections = getSortedSections(prompt.sections);
 
   return (
     <div className="flex flex-col">
