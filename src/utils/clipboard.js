@@ -8,7 +8,3 @@ export function copyAllSections(sections) {
 
   return navigator.clipboard.writeText(text);
 }
-
-export function copyPromptText(prompt) {
-  return copyAllSections(prompt.sections);
-}

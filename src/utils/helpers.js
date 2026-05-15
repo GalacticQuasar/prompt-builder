@@ -2,13 +2,7 @@ export function generateId() {
   return crypto.randomUUID();
 }
 
-export function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-export function formatDate(isoString) {
+function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString();
 }
 

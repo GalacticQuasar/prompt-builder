@@ -11,7 +11,6 @@ const initialState = {
   activePromptIndex: 0,
   db: null,
   initialized: false,
-  saving: false,
 };
 
 function reducer(state, action) {
@@ -41,12 +40,8 @@ function reducer(state, action) {
       return {
         ...state,
         projects: state.projects.map((p) => (p.id === updated.id ? updated : p)),
-        saving: true,
       };
     }
-
-    case 'SAVING_DONE':
-      return { ...state, saving: false };
 
     case 'ADD_PROJECT': {
       const project = action.payload;
@@ -245,26 +240,12 @@ export function ProjectProvider({ children }) {
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           await saveProject(state.db, project);
-          dispatch({ type: 'SAVING_DONE' });
         } catch (err) {
           console.error('Auto-save failed:', err);
         }
       }, 300);
     },
     [state.db]
-  );
-
-  const dispatchAndSave = useCallback(
-    (action) => {
-      dispatch(action);
-      if (state.db) {
-        setTimeout(() => {
-          const updatedProject = getActiveProject();
-          if (updatedProject) autoSave(updatedProject);
-        }, 0);
-      }
-    },
-    [state.db, getActiveProject, autoSave]
   );
 
   const createNewProject = useCallback(
@@ -392,7 +373,6 @@ export function ProjectProvider({ children }) {
       value={{
         state,
         dispatch,
-        dispatchAndSave,
         getActiveProject,
         getActivePrompt,
         createNewProject,

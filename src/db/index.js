@@ -3,7 +3,6 @@ import { openDB } from 'idb';
 const DB_NAME = 'PromptBuilderDB';
 const DB_VERSION = 1;
 const PROJECT_STORE = 'projects';
-const TEMPLATE_STORE = 'templates';
 
 export async function initDB() {
   return openDB(DB_NAME, DB_VERSION, {
@@ -11,10 +10,6 @@ export async function initDB() {
       if (!db.objectStoreNames.contains(PROJECT_STORE)) {
         const projectStore = db.createObjectStore(PROJECT_STORE, { keyPath: 'id' });
         projectStore.createIndex('updatedAt', 'updatedAt');
-      }
-      if (!db.objectStoreNames.contains(TEMPLATE_STORE)) {
-        const templateStore = db.createObjectStore(TEMPLATE_STORE, { keyPath: 'id' });
-        templateStore.createIndex('name', 'name', { unique: true });
       }
     },
   });
@@ -24,28 +19,12 @@ export async function getAllProjects(db) {
   return db.getAll(PROJECT_STORE);
 }
 
-export async function getProject(db, id) {
-  return db.get(PROJECT_STORE, id);
-}
-
 export async function saveProject(db, project) {
   await db.put(PROJECT_STORE, { ...project, updatedAt: new Date().toISOString() });
 }
 
 export async function deleteProject(db, id) {
   await db.delete(PROJECT_STORE, id);
-}
-
-export async function getAllTemplates(db) {
-  return db.getAll(TEMPLATE_STORE);
-}
-
-export async function saveTemplate(db, template) {
-  await db.put(TEMPLATE_STORE, template);
-}
-
-export async function deleteTemplate(db, id) {
-  await db.delete(TEMPLATE_STORE, id);
 }
 
 export async function migrateFromLocalStorage(db) {
