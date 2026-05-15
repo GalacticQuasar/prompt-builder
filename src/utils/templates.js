@@ -1,3 +1,5 @@
+import { generateId } from './helpers';
+
 const BUILTIN_TEMPLATES = [
   {
     id: 'tpl-general-assistant',
@@ -50,17 +52,17 @@ export function getBuiltInTemplates() {
 
 export function createProjectFromTemplate(template) {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     name: template.name,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     prompts: [
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         label: 'v1',
         sections: template.sections.map((s, i) => ({
           ...s,
-          id: crypto.randomUUID(),
+          id: generateId(),
           order: i,
         })),
         createdAt: new Date().toISOString(),

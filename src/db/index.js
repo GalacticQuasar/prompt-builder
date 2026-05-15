@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+import { generateId } from '../utils/helpers';
 
 const DB_NAME = 'PromptBuilderDB';
 const DB_VERSION = 1;
@@ -37,16 +38,16 @@ export async function migrateFromLocalStorage(db) {
     if (!Array.isArray(prompts) || prompts.length === 0) return false;
 
     const project = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: 'Imported (legacy)',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       prompts: [
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           label: 'v1',
           sections: prompts.map((content, index) => ({
-            id: crypto.randomUUID(),
+            id: generateId(),
             label: index === 0 ? 'System Prompt' : `Section ${index + 1}`,
             content,
             locked: false,

@@ -1,4 +1,5 @@
 import { useProject } from '../context/ProjectContext';
+import { generateId } from '../utils/helpers';
 
 export default function AddSection() {
   const { state, dispatch, getActivePrompt, autoSave } = useProject();
@@ -9,7 +10,7 @@ export default function AddSection() {
     if (!prompt || !project) return;
 
     const section = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       label,
       content: '',
       locked: false,
