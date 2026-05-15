@@ -10,6 +10,7 @@ function ProjectCard({ project, isActive, onSelect, onRename, onDelete }) {
 
   const handleContextMenu = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setMenu({ x: e.clientX, y: e.clientY });
   };
 

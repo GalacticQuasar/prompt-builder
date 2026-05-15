@@ -7,7 +7,7 @@ export default function TemplatePanel({ onClose }) {
 
   const handleUseTemplate = (template) => {
     createProjectFromTemplate(template);
-    if (onClose) onClose();
+    onClose();
   };
 
   return (

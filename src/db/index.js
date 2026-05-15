@@ -31,11 +31,11 @@ export async function deleteProject(db, id) {
 export async function migrateFromLocalStorage(db) {
   const LEGACY_KEY = 'prompt-builder-data';
   const raw = localStorage.getItem(LEGACY_KEY);
-  if (!raw) return false;
+  if (!raw) return null;
 
   try {
     const prompts = JSON.parse(raw);
-    if (!Array.isArray(prompts) || prompts.length === 0) return false;
+    if (!Array.isArray(prompts) || prompts.length === 0) return null;
 
     const project = {
       id: generateId(),
@@ -62,6 +62,6 @@ export async function migrateFromLocalStorage(db) {
     localStorage.removeItem(LEGACY_KEY);
     return project.id;
   } catch {
-    return false;
+    return null;
   }
 }

@@ -9,7 +9,7 @@ export default function ProjectSidebar({ onClose }) {
 
   const handleNewProject = () => {
     createNewProject();
-    if (onClose) onClose();
+    onClose();
   };
 
   return (

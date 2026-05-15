@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useProject } from '../context/ProjectContext';
+import { saveProject } from '../db';
 
 export function useAutoSave(delay = 300) {
   const { state, getActiveProject } = useProject();
@@ -14,7 +15,6 @@ export function useAutoSave(delay = 300) {
 
     timeoutRef.current = setTimeout(async () => {
       try {
-        const { saveProject } = await import('../db');
         await saveProject(state.db, project);
       } catch (err) {
         console.error('Auto-save failed:', err);
