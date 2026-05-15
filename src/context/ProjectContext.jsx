@@ -108,6 +108,14 @@ function reducer(state, action) {
 
     case 'DELETE_PROMPT': {
       const { projectId, promptId } = action.payload;
+      const targetProject = state.projects.find((p) => p.id === projectId);
+      const promptIndex = targetProject
+        ? targetProject.prompts.findIndex((pr) => pr.id === promptId)
+        : -1;
+      const newActiveIndex =
+        promptIndex <= state.activePromptIndex && state.activePromptIndex > 0
+          ? state.activePromptIndex - 1
+          : state.activePromptIndex;
       return {
         ...state,
         projects: state.projects.map((p) =>
@@ -119,7 +127,7 @@ function reducer(state, action) {
               }
             : p
         ),
-        activePromptIndex: Math.max(0, state.activePromptIndex - 1),
+        activePromptIndex: newActiveIndex,
       };
     }
 

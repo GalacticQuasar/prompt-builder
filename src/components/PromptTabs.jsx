@@ -102,7 +102,7 @@ export default function PromptTabs() {
 
   const handleDelete = (index) => {
     dispatch({ type: 'SET_ACTIVE_PROMPT_INDEX', payload: index });
-    setTimeout(() => deleteCurrentPrompt(), 0);
+    deleteCurrentPrompt();
   };
 
   return (
