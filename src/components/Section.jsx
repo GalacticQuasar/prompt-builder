@@ -1,16 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { truncateText } from '../utils/helpers';
 import { estimateTokens } from '../utils/tokenizer';
 
 export default function Section({ section, promptId }) {
-  const { state, dispatch, autoSave } = useProject();
-  const project = state.projects.find((p) => p.id === state.activeProjectId);
+  const { dispatch, autoSave, getActiveProject } = useProject();
+  const project = getActiveProject();
   const [collapsed, setCollapsed] = useState(false);
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(section.label);
-  const textareaRef = useRef(null);
-
   const truncated = truncateText(section.content);
   const shouldCollapse = truncated && collapsed;
 
@@ -80,7 +78,13 @@ export default function Section({ section, promptId }) {
                 value={labelValue}
                 onChange={(e) => setLabelValue(e.target.value)}
                 onBlur={finishLabelEdit}
-                onKeyDown={(e) => e.key === 'Enter' && finishLabelEdit()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') finishLabelEdit();
+                  if (e.key === 'Escape') {
+                    setLabelValue(section.label);
+                    setEditingLabel(false);
+                  }
+                }}
                 autoFocus
               />
             ) : (
@@ -146,7 +150,6 @@ export default function Section({ section, promptId }) {
           </div>
         ) : (
           <textarea
-            ref={textareaRef}
             className="textarea textarea-bordered w-full focus:outline-none resize-y"
             rows={4}
             value={section.content}
