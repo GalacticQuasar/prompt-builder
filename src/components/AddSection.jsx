@@ -35,18 +35,13 @@ export default function AddSection() {
     });
   };
 
-  const presets = ['System Prompt', 'Context', 'Instructions', 'Examples', 'Output Format'];
+  const prompt = getActivePrompt();
+  const nextNum = prompt ? prompt.sections.length + 1 : 1;
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <span className="text-sm opacity-60">Add section:</span>
-      {presets.map((label) => (
-        <button key={label} className="btn btn-xs btn-outline" onClick={() => handleAdd(label)}>
-          {label}
-        </button>
-      ))}
-      <button className="btn btn-xs btn-outline btn-primary" onClick={() => handleAdd('Custom')}>
-        + Custom
+    <div className="flex justify-center py-2">
+      <button className="btn btn-outline btn-primary px-40" onClick={() => handleAdd(`Section ${nextNum}`)}>
+        + Add Section
       </button>
     </div>
   );
