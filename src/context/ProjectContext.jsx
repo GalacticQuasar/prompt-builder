@@ -186,7 +186,12 @@ function reducer(state, action) {
                 ...p,
                 prompts: p.prompts.map((pr) =>
                   pr.id === promptId
-                    ? { ...pr, sections: pr.sections.filter((s) => s.id !== sectionId) }
+                    ? {
+                        ...pr,
+                        sections: pr.sections
+                          .filter((s) => s.id !== sectionId)
+                          .map((s, i) => ({ ...s, order: i })),
+                      }
                     : pr
                 ),
                 updatedAt: new Date().toISOString(),
