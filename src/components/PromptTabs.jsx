@@ -87,7 +87,7 @@ function EditableLabel({ value, onChange, active }) {
     return (
       <input
         type="text"
-        className="input input-xs input-bordered w-24"
+        className="input input-xs input-bordered w-24 focus:outline-none"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onBlur={() => {
@@ -98,6 +98,9 @@ function EditableLabel({ value, onChange, active }) {
           if (e.key === 'Enter') {
             setEditing(false);
             onChange(text);
+          }
+          if (e.key === 'Escape') {
+            setEditing(false);
           }
         }}
         autoFocus

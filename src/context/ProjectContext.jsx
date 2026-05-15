@@ -363,10 +363,12 @@ export function ProjectProvider({ children }) {
 
   const renameProject = useCallback(
     (id, name) => {
-      dispatch({ type: 'UPDATE_PROJECT', payload: { id, name } });
       const project = state.projects.find((p) => p.id === id);
-      if (project && state.db) {
-        saveProject(state.db, { ...project, name, updatedAt: new Date().toISOString() });
+      if (!project) return;
+      const updated = { ...project, name, updatedAt: new Date().toISOString() };
+      dispatch({ type: 'UPDATE_PROJECT', payload: updated });
+      if (state.db) {
+        saveProject(state.db, updated);
       }
     },
     [state.projects, state.db]
