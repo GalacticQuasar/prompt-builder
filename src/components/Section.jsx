@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { truncateText } from '../utils/helpers';
 import { estimateTokens } from '../utils/tokenizer';
@@ -10,9 +10,6 @@ export default function Section({ section, promptId }) {
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(section.label);
 
-  useEffect(() => {
-    if (!editingLabel) setLabelValue(section.label);
-  }, [section.label, editingLabel]);
   const truncated = truncateText(section.content);
   const shouldCollapse = truncated && collapsed;
 
