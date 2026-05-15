@@ -297,16 +297,7 @@ export function ProjectProvider({ children }) {
       type: 'ADD_PROMPT',
       payload: { projectId: project.id, prompt: newPrompt },
     });
-
-    if (state.db) {
-      const updated = {
-        ...project,
-        prompts: [...project.prompts, newPrompt],
-        updatedAt: new Date().toISOString(),
-      };
-      saveProject(state.db, updated);
-    }
-  }, [getActiveProject, state.activePromptIndex, state.db]);
+  }, [getActiveProject, state.activePromptIndex]);
 
   const deletePromptById = useCallback(
     (promptId) => {
@@ -319,17 +310,8 @@ export function ProjectProvider({ children }) {
         type: 'DELETE_PROMPT',
         payload: { projectId: project.id, promptId },
       });
-
-      if (state.db) {
-        const updated = {
-          ...project,
-          prompts: project.prompts.filter((p) => p.id !== promptId),
-          updatedAt: new Date().toISOString(),
-        };
-        saveProject(state.db, updated);
-      }
     },
-    [getActiveProject, state.db]
+    [getActiveProject]
   );
 
   const deleteProjectById = useCallback(
