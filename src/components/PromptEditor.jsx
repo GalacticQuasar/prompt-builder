@@ -9,7 +9,7 @@ import TokenCounter from './TokenCounter';
 import { copyAllSections } from '../utils/clipboard';
 
 export default function PromptEditor() {
-  const { dispatch, getActivePrompt, getActiveProject, autoSave } = useProject();
+  const { dispatch, getActivePrompt, getActiveProject } = useProject();
   const project = getActiveProject();
   const prompt = getActivePrompt();
 
@@ -27,13 +27,6 @@ export default function PromptEditor() {
     dispatch({
       type: 'REORDER_SECTIONS',
       payload: { projectId: project.id, promptId: prompt.id, sections: reordered },
-    });
-    autoSave({
-      ...project,
-      prompts: project.prompts.map((pr) =>
-        pr.id === prompt.id ? { ...pr, sections: reordered } : pr
-      ),
-      updatedAt: new Date().toISOString(),
     });
   };
 

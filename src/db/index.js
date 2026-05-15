@@ -21,7 +21,7 @@ export async function getAllProjects(db) {
 }
 
 export async function saveProject(db, project) {
-  await db.put(PROJECT_STORE, { ...project, updatedAt: new Date().toISOString() });
+  await db.put(PROJECT_STORE, project);
 }
 
 export async function deleteProject(db, id) {

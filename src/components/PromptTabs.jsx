@@ -65,7 +65,7 @@ function TabItem({ prompt, index, isActive, promptCount, onSelect, onLabelChange
           y={menu.y}
           onRename={startEditing}
           canDelete={promptCount > 1}
-          onDelete={() => onDelete(index)}
+          onDelete={() => onDelete(prompt.id)}
           onClose={() => setMenu(null)}
         />
       )}
@@ -74,7 +74,7 @@ function TabItem({ prompt, index, isActive, promptCount, onSelect, onLabelChange
 }
 
 export default function PromptTabs() {
-  const { state, dispatch, getActiveProject, deleteCurrentPrompt, duplicateCurrentPrompt, autoSave } = useProject();
+  const { state, dispatch, getActiveProject, deletePromptById, duplicateCurrentPrompt } = useProject();
   const project = getActiveProject();
 
   if (!project) return null;
@@ -90,19 +90,10 @@ export default function PromptTabs() {
       type: 'UPDATE_PROMPT',
       payload: { projectId, promptId, updates: { label: newLabel } },
     });
-    const updated = {
-      ...project,
-      prompts: project.prompts.map((p) =>
-        p.id === promptId ? { ...p, label: newLabel } : p
-      ),
-      updatedAt: new Date().toISOString(),
-    };
-    autoSave(updated);
   };
 
-  const handleDelete = (index) => {
-    dispatch({ type: 'SET_ACTIVE_PROMPT_INDEX', payload: index });
-    deleteCurrentPrompt();
+  const handleDelete = (promptId) => {
+    deletePromptById(promptId);
   };
 
   return (
@@ -122,7 +113,7 @@ export default function PromptTabs() {
       <button
         className="btn btn-sm btn-ghost btn-square"
         onClick={() => duplicateCurrentPrompt()}
-        title="Duplicate current version (Cmd+Shift+D)"
+        title="Duplicate version"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

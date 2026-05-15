@@ -4,11 +4,12 @@ import { truncateText } from '../utils/helpers';
 import { estimateTokens } from '../utils/tokenizer';
 
 export default function Section({ section, promptId }) {
-  const { dispatch, autoSave, getActiveProject } = useProject();
+  const { dispatch, getActiveProject } = useProject();
   const project = getActiveProject();
   const [collapsed, setCollapsed] = useState(false);
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(section.label);
+
   const truncated = truncateText(section.content);
   const shouldCollapse = truncated && collapsed;
 
@@ -22,23 +23,6 @@ export default function Section({ section, promptId }) {
 
   const handleChange = (field, value) => {
     updateSection({ [field]: value });
-    if (project) {
-      const updated = {
-        ...project,
-        prompts: project.prompts.map((pr) =>
-          pr.id === promptId
-            ? {
-                ...pr,
-                sections: pr.sections.map((s) =>
-                  s.id === section.id ? { ...s, [field]: value } : s
-                ),
-              }
-            : pr
-        ),
-        updatedAt: new Date().toISOString(),
-      };
-      autoSave(updated);
-    }
   };
 
   const handleDelete = () => {
@@ -47,16 +31,6 @@ export default function Section({ section, promptId }) {
       type: 'DELETE_SECTION',
       payload: { projectId: project.id, promptId, sectionId: section.id },
     });
-    const updated = {
-      ...project,
-      prompts: project.prompts.map((pr) =>
-        pr.id === promptId
-          ? { ...pr, sections: pr.sections.filter((s) => s.id !== section.id) }
-          : pr
-      ),
-      updatedAt: new Date().toISOString(),
-    };
-    autoSave(updated);
   };
 
   const finishLabelEdit = () => {

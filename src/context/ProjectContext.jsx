@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useCallback, useRef } from 'react';
+import { createContext, useContext, useReducer, useCallback } from 'react';
 import { generateId, getNextVersionLabel } from '../utils/helpers';
 import { createProjectFromTemplate as buildProjectFromTemplate } from '../utils/templates';
 import { saveProject, deleteProject as dbDeleteProject } from '../db';
@@ -221,7 +221,6 @@ function reducer(state, action) {
 
 export function ProjectProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const saveTimeoutRef = useRef(null);
 
   const getActiveProject = useCallback(() => {
     return state.projects.find((p) => p.id === state.activeProjectId) || null;
@@ -232,21 +231,6 @@ export function ProjectProvider({ children }) {
     if (!project) return null;
     return project.prompts[state.activePromptIndex] || null;
   }, [getActiveProject, state.activePromptIndex]);
-
-  const autoSave = useCallback(
-    (project) => {
-      if (!state.db || !project) return;
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(async () => {
-        try {
-          await saveProject(state.db, project);
-        } catch (err) {
-          console.error('Auto-save failed:', err);
-        }
-      }, 300);
-    },
-    [state.db]
-  );
 
   const createNewProject = useCallback(
     (name = 'Untitled Project') => {
@@ -324,26 +308,29 @@ export function ProjectProvider({ children }) {
     }
   }, [getActiveProject, state.activePromptIndex, state.db]);
 
-  const deleteCurrentPrompt = useCallback(() => {
-    const project = getActiveProject();
-    if (!project || project.prompts.length <= 1) return;
-    const currentPrompt = project.prompts[state.activePromptIndex];
-    if (!currentPrompt) return;
+  const deletePromptById = useCallback(
+    (promptId) => {
+      const project = getActiveProject();
+      if (!project || project.prompts.length <= 1) return;
+      const target = project.prompts.find((p) => p.id === promptId);
+      if (!target) return;
 
-    dispatch({
-      type: 'DELETE_PROMPT',
-      payload: { projectId: project.id, promptId: currentPrompt.id },
-    });
+      dispatch({
+        type: 'DELETE_PROMPT',
+        payload: { projectId: project.id, promptId },
+      });
 
-    if (state.db) {
-      const updated = {
-        ...project,
-        prompts: project.prompts.filter((p) => p.id !== currentPrompt.id),
-        updatedAt: new Date().toISOString(),
-      };
-      saveProject(state.db, updated);
-    }
-  }, [getActiveProject, state.activePromptIndex, state.db]);
+      if (state.db) {
+        const updated = {
+          ...project,
+          prompts: project.prompts.filter((p) => p.id !== promptId),
+          updatedAt: new Date().toISOString(),
+        };
+        saveProject(state.db, updated);
+      }
+    },
+    [getActiveProject, state.db]
+  );
 
   const deleteProjectById = useCallback(
     (id) => {
@@ -378,10 +365,9 @@ export function ProjectProvider({ children }) {
         createNewProject,
         createProjectFromTemplate,
         duplicateCurrentPrompt,
-        deleteCurrentPrompt,
+        deletePromptById,
         deleteProjectById,
         renameProject,
-        autoSave,
       }}
     >
       {children}

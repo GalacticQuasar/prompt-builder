@@ -2,8 +2,8 @@ import { useProject } from '../context/ProjectContext';
 import { generateId } from '../utils/helpers';
 
 export default function AddSection() {
-  const { state, dispatch, getActivePrompt, autoSave } = useProject();
-  const project = state.projects.find((p) => p.id === state.activeProjectId);
+  const { dispatch, getActiveProject, getActivePrompt } = useProject();
+  const project = getActiveProject();
 
   const handleAdd = (label) => {
     const prompt = getActivePrompt();
@@ -21,15 +21,6 @@ export default function AddSection() {
       type: 'ADD_SECTION',
       payload: { projectId: project.id, promptId: prompt.id, section },
     });
-
-    const updated = {
-      ...project,
-      prompts: project.prompts.map((pr) =>
-        pr.id === prompt.id ? { ...pr, sections: [...pr.sections, section] } : pr
-      ),
-      updatedAt: new Date().toISOString(),
-    };
-    autoSave(updated);
 
     requestAnimationFrame(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
