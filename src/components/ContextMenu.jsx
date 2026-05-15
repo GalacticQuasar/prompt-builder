@@ -1,7 +1,18 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 export default function ContextMenu({ x, y, onRename, onDelete, canDelete = true, onClose }) {
   const ref = useRef(null);
+  const [pos, setPos] = useState({ x, y });
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const clampX = Math.min(x, window.innerWidth - rect.width - 8);
+    const clampY = Math.min(y, window.innerHeight - rect.height - 8);
+    if (clampX !== x || clampY !== y) {
+      setPos({ x: Math.max(0, clampX), y: Math.max(0, clampY) });
+    }
+  }, [x, y]);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -20,10 +31,10 @@ export default function ContextMenu({ x, y, onRename, onDelete, canDelete = true
   }, [onClose]);
 
   return (
-    <div
+    <ul
       ref={ref}
       className="fixed z-50 menu bg-base-100 rounded-box shadow-lg border border-base-300 w-44 p-1"
-      style={{ top: y, left: x }}
+      style={{ top: pos.y, left: pos.x }}
     >
       <li>
         <button
@@ -49,6 +60,6 @@ export default function ContextMenu({ x, y, onRename, onDelete, canDelete = true
           </button>
         </li>
       )}
-    </div>
+    </ul>
   );
 }
