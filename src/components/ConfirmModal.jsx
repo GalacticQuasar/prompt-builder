@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function ConfirmModal({ open, title, message, confirmLabel = 'Delete', onConfirm, onCancel }) {
   const dialogRef = useRef(null);
@@ -14,12 +15,10 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
   }, [open]);
 
   const handleCancel = () => {
-    dialogRef.current?.close();
     onCancel();
   };
 
   const handleConfirm = () => {
-    dialogRef.current?.close();
     onConfirm();
   };
 
@@ -29,11 +28,17 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
     }
   };
 
-  return (
+  const handleCancelEvent = (e) => {
+    e.preventDefault();
+    onCancel();
+  };
+
+  return createPortal(
     <dialog
       ref={dialogRef}
       className="modal"
       onClick={handleBackdropClick}
+      onCancel={handleCancelEvent}
     >
       <div className="modal-box">
         <h3 className="text-lg font-bold">{title}</h3>
@@ -43,6 +48,7 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
           <button className="btn btn-sm btn-error" onClick={handleConfirm}>{confirmLabel}</button>
         </div>
       </div>
-    </dialog>
+    </dialog>,
+    document.body
   );
 }
