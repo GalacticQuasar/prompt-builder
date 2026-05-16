@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { formatRelativeDate } from '../utils/helpers';
 import ContextMenu from './ContextMenu';
+import ConfirmModal from './ConfirmModal';
 
 function ProjectCard({ project, isActive, onSelect, onRename, onDelete }) {
   const [menu, setMenu] = useState(null);
@@ -100,14 +101,20 @@ function ProjectCard({ project, isActive, onSelect, onRename, onDelete }) {
 
 export default function ProjectList() {
   const { state, dispatch, deleteProjectById, renameProject } = useProject();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const handleSelect = (id) => {
     dispatch({ type: 'SET_ACTIVE_PROJECT', payload: id });
   };
 
   const handleDelete = (id, name) => {
-    if (confirm(`Delete project "${name}"?`)) {
-      deleteProjectById(id);
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteProjectById(deleteTarget.id);
+      setDeleteTarget(null);
     }
   };
 
@@ -122,17 +129,27 @@ export default function ProjectList() {
   );
 
   return (
-    <div className="space-y-1">
-      {sorted.map((project) => (
-        <ProjectCard
-          key={project.id}
-          project={project}
-          isActive={project.id === state.activeProjectId}
-          onSelect={handleSelect}
-          onRename={(name) => renameProject(project.id, name)}
-          onDelete={handleDelete}
-        />
-      ))}
-    </div>
+    <>
+      <div className="space-y-1">
+        {sorted.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            isActive={project.id === state.activeProjectId}
+            onSelect={handleSelect}
+            onRename={(name) => renameProject(project.id, name)}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </>
   );
 }

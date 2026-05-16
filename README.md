@@ -95,7 +95,8 @@ src/
     ├── Section.jsx             # Collapsible/lockable text block with label editing
     ├── AddSection.jsx          # "+ Add Section" button
     ├── TokenCounter.jsx        # Total tokens badge, per-section breakdown on click
-    └── ContextMenu.jsx         # Shared right-click context menu (rename/delete)
+    ├── ContextMenu.jsx         # Shared right-click context menu (rename/delete)
+    └── ConfirmModal.jsx        # DaisyUI dialog modal for delete confirmations
 ```
 
 ---
@@ -108,7 +109,7 @@ src/
 - **New Project** button creates a project with one prompt v1 containing a single "System Prompt" section
 - **Right-click** a project card for a context menu with **Rename** and **Delete** options
 - **Double-click** the project title in the navbar header to rename inline
-- Delete requires confirmation
+- Delete requires confirmation via a DaisyUI modal dialog
 - On mobile (≤768px) the drawer expands to full viewport width
 
 ### Prompt Versions (Iterations)
@@ -229,7 +230,6 @@ The `projects` store holds the entire project tree (project → prompts → sect
 - **`useAutoSave` over-broad dependency** — watches entire `state.projects` array; could be narrowed to watch only the active project
 - **Action type strings are bare strings** — reducer action types like `'ADD_SECTION'` could be extracted to constants for typo-safety
 - **No React error boundary** — any component crash whitescreens the entire app
-- **`confirm()` for project delete** — blocking and inaccessible; should use a modal dialog
 
 ---
 
