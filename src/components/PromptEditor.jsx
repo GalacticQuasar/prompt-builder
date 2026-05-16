@@ -1,0 +1,182 @@
+import { useState } from 'react';
+import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useProject } from '../context/ProjectContext';
+import Section from './Section';
+import AddSection from './AddSection';
+import PromptTabs from './PromptTabs';
+import TokenCounter from './TokenCounter';
+import { copyAllSections } from '../utils/clipboard';
+import { getSortedSections } from '../utils/helpers';
+
+const COPY_MODES = [
+  { value: 'plain', label: 'Plain' },
+  { value: 'labeled', label: 'Labeled' },
+];
+
+export default function PromptEditor() {
+  const { dispatch, getActivePrompt, getActiveProject } = useProject();
+  const project = getActiveProject();
+  const prompt = getActivePrompt();
+  const [activeId, setActiveId] = useState(null);
+  const [copyMode, setCopyMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('copyMode');
+      return COPY_MODES.some((m) => m.value === saved) ? saved : 'plain';
+    } catch {
+      return 'plain';
+    }
+  });
+  const handleChangeCopyMode = (mode) => {
+    setCopyMode(mode);
+    try { localStorage.setItem('copyMode', mode); } catch { /* ignored */ }
+  };
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over || active.id === over.id || !prompt || !project) return;
+
+    const oldIndex = prompt.sections.findIndex((s) => s.id === active.id);
+    const newIndex = prompt.sections.findIndex((s) => s.id === over.id);
+    const reordered = arrayMove(prompt.sections, oldIndex, newIndex).map((s, i) => ({
+      ...s,
+      order: i,
+    }));
+
+    dispatch({
+      type: 'REORDER_SECTIONS',
+      payload: { projectId: project.id, promptId: prompt.id, sections: reordered },
+    });
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
+
+  const handleCopyAll = async () => {
+    if (!prompt) return;
+    try {
+      await copyAllSections(prompt.sections, copyMode);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  };
+
+  if (!project || !prompt) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-center opacity-50 min-h-[calc(100vh-4rem-2rem)]">
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <p className="text-lg">Select or create a project</p>
+          <p className="text-sm mt-1">Use the sidebar to get started</p>
+        </div>
+      </div>
+    );
+  }
+
+  const sortedSections = getSortedSections(prompt.sections);
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between mb-2">
+        <PromptTabs />
+          <div className="flex items-center gap-2">
+          <TokenCounter />
+          <div className="join">
+            <button className="btn btn-sm btn-accent join-item" onClick={handleCopyAll} title="Copy all sections (Cmd+Shift+C)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/>
+              </svg>
+              Copy All
+            </button>
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-sm btn-accent join-item px-2" title="Copy aggregation mode">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <ul tabIndex={0} className="dropdown-content menu bg-base-200 rounded-box z-50 p-2 shadow text-sm">
+                {COPY_MODES.map((m) => (
+                  <li key={m.value}>
+                    <button className={copyMode === m.value ? 'active' : ''} onClick={() => handleChangeCopyMode(m.value)}>
+                      <span className="w-4 text-center">{copyMode === m.value ? '✓' : ''}</span>
+                      {m.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          </div>
+      </div>
+
+      <div className="divider my-0"></div>
+
+      <div className="py-4 space-y-3" id="textarea-list">
+        <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+          <SortableContext items={sortedSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            {sortedSections.map((section) => (
+              <SortableSection key={section.id} section={section} promptId={prompt.id} isOverlay={false} />
+            ))}
+          </SortableContext>
+          <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
+            {activeId ? (
+              <SortableSection
+                section={sortedSections.find((s) => s.id === activeId)}
+                promptId={prompt.id}
+                isOverlay
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+
+        <AddSection />
+      </div>
+    </div>
+  );
+}
+
+function SortableSection({ section, promptId, isOverlay }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0 : 1,
+  };
+
+  if (isOverlay) {
+    return (
+      <div className="card bg-base-200 shadow-lg" style={{ width: '100%' }}>
+        <Section section={section} promptId={promptId} />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div className="flex gap-2">
+        <div
+          className="cursor-grab active:cursor-grabbing flex items-center opacity-30 hover:opacity-70"
+          {...listeners}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <Section section={section} promptId={promptId} />
+        </div>
+      </div>
+    </div>
+  );
+}
