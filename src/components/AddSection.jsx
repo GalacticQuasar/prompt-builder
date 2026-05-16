@@ -32,7 +32,7 @@ export default function AddSection() {
 
   return (
     <div className="flex justify-center py-2">
-      <button className="btn btn-outline btn-primary px-40" onClick={() => handleAdd(`Section ${nextNum}`)}>
+      <button className="btn btn-outline btn-primary w-full max-w-xs sm:max-w-sm md:max-w-sm" onClick={() => handleAdd(`Section ${nextNum}`)}>
         + Add Section
       </button>
     </div>
