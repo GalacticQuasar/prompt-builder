@@ -85,8 +85,8 @@ function AppInner() {
             ) : activeProject ? (
               <h1
                 className="text-xl font-bold text-primary cursor-pointer select-none"
-                onDoubleClick={startEditingTitle}
-                title="Double-click to rename"
+                onClick={startEditingTitle}
+                title="Click to rename"
               >
                 {activeProject.name}
               </h1>
