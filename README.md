@@ -1,6 +1,6 @@
 # Prompt Builder V3
 
-A progressive web app for building, versioning, and managing LLM prompts. Organize your prompts into projects with iterative versions, drag-and-drop sections, lock content from accidental edits, estimate token counts, and one-click copy — all stored locally in your browser.
+A progressive web app for building, versioning, and managing LLM prompts. Organize your prompts into projects with iterative versions, drag-and-drop sections, lock content from accidental edits, estimate token counts, and one-click copy. All stored locally in your browser.
 
 Built with React 19, Vite 8, Tailwind CSS 4, DaisyUI 5, and IndexedDB.
 
@@ -32,7 +32,7 @@ npm run lint     # eslint
 | Framework | React 19 | UI rendering |
 | Build | Vite 8 | Dev server, HMR, bundling |
 | Styling | Tailwind CSS 4 + DaisyUI 5 | Utility classes + component library (`dim` theme) |
-| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable | Section reordering |
+| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities | Section reordering |
 | Persistence | IndexedDB via `idb` | Projects and prompts |
 | PWA | vite-plugin-pwa | Offline support, add-to-homescreen |
 | Token Estimation | `length / 4` heuristic | Quick token count approximation |
@@ -79,17 +79,17 @@ src/
 │   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, getSortedSections, truncateText
 │   ├── tokenizer.js            # estimateTokens (char/4 heuristic), formatTokenCount
 │   ├── clipboard.js            # copyAllSections (plain or labeled mode)
-│   └── templates.js            # 4 built-in templates, createProjectFromTemplate()
+│   └── templates.js            # 4 built-in templates, getBuiltInTemplates(), createProjectFromTemplate()
 │
 ├── hooks/
 │   ├── useAutoSave.js          # Debounced 300ms save to IndexedDB on state change
 │   └── useKeyboardShortcuts.js # Arrow keys for version nav
 │
 └── components/
-    ├── App.jsx                 # (root, re-exports from context)
     ├── ProjectSidebar.jsx      # Left drawer: project list + templates toggle
     ├── ProjectList.jsx         # Sorted project cards with right-click context menu
     ├── TemplatePanel.jsx       # Built-in templates that create new projects
+    ├── EmptyState.jsx          # Welcome screen with feature highlights & template quick-start
     ├── PromptEditor.jsx        # Main editing area: tabs + sections + DnD + copy
     ├── PromptTabs.jsx          # Version tabs with right-click context menu
     ├── Section.jsx             # Collapsible/lockable text block with label editing
@@ -108,7 +108,7 @@ src/
 - Left sidebar (DaisyUI Drawer) lists all projects sorted by most recently updated
 - **New Project** button creates a project with one prompt v1 containing a single "System Prompt" section
 - **Right-click** a project card for a context menu with **Rename** and **Delete** options
-- **Double-click** the project title in the navbar header to rename inline
+- **Click** the project title in the navbar header to rename inline
 - Delete requires confirmation via a DaisyUI modal dialog
 - On mobile (≤768px) the drawer expands to full viewport width
 
@@ -121,8 +121,8 @@ src/
 - **Duplicate** button (+) clones all sections into a new version
 - **Right-click** a tab for a context menu with **Rename** and **Delete** options (delete requires >1 version, no confirmation)
 - **Copy All** button copies all sections of the current version with a choice of aggregation mode:
-  - **Plain** — sections joined by `\n\n` (default)
-  - **Labeled** — each section wrapped in `<Label>...</Label>` tags
+  - **Plain** - sections joined by `\n\n` (default)
+  - **Labeled** - each section wrapped in `<Label>...</Label>` tags
 - The copy mode persists across sessions via `localStorage`
 
 ### Sections
@@ -130,9 +130,9 @@ src/
 - Each prompt version contains ordered **sections** (System Prompt, Context, Instructions, etc.)
 - **Add Section** button at the bottom creates a new section with an auto-incremented label
 - Each section has:
-  - **Editable label** — click the label text to rename (Escape to cancel)
-  - **Lock toggle** (🔒/🔓) — makes textarea `readonly` to prevent accidental edits
-  - **Collapse toggle** — long content shows first 2 lines → `...` → last 2 lines. Click to expand.
+  - **Editable label** - click the label text to rename (Escape to cancel)
+  - **Lock toggle** (🔒/🔓) - makes textarea `readonly` to prevent accidental edits
+  - **Collapse toggle** - long content shows first 2 lines → `...` → last 2 lines. Click to expand.
   - **Delete** button (×)
   - **Line count + token estimate** shown below the label
 - **Drag-and-drop reordering** within a version via @dnd-kit (drag handle on the left)
@@ -148,6 +148,12 @@ src/
 - 4 built-in templates: General Assistant, Code Helper, Creative Writing, Data Analyzer
 - Clicking a template creates a new project pre-populated with labeled sections and starter content
 - Templates panel is collapsible in the sidebar
+
+### Empty State
+
+- When no project is active, an `EmptyState` component displays a welcome screen
+- Shows a grid of 6 feature cards (Versions, Sections, Drag & Drop, Copy Modes, Token Count, Lock Sections)
+- Includes quick-start buttons for each built-in template and a "New Blank Project" button
 
 ### Auto-Save
 
@@ -200,6 +206,8 @@ Available via `useProject()` hook:
 
 | Method | Description |
 |---|---|
+| `state` | Raw reducer state object |
+| `dispatch` | Dispatch reducer actions directly |
 | `createNewProject(name?)` | Create project with v1 + default section |
 | `createProjectFromTemplate(template)` | Create project from template object |
 | `duplicateCurrentPrompt()` | Clone current version into new version |
@@ -219,20 +227,20 @@ Database: `PromptBuilderDB`, version 1
 |---|---|---|---|
 | `projects` | `id` | `updatedAt` | All project data including nested prompts/sections |
 
-The `projects` store holds the entire project tree (project → prompts → sections) as a single document. There is no normalization — each project is a self-contained record.
+The `projects` store holds the entire project tree (project → prompts → sections) as a single document. There is no normalization - each project is a self-contained record.
 
 ---
 
 ## Known Limitations & TODO
 
-- **No undo/redo** — state changes are immediate with no history stack
-- **No user-created templates** — `TemplatePanel` shows built-in templates but "Save as Template" is not implemented
-- **No export/import of project data** — all data is in IndexedDB with no JSON export (could add a download button)
-- **No section content search** — no way to search across sections/projects
-- **Collapse state doesn't persist** — whether a section is collapsed is UI-only state, not saved to IndexedDB
-- **`useAutoSave` over-broad dependency** — watches entire `state.projects` array; could be narrowed to watch only the active project
-- **Action type strings are bare strings** — reducer action types like `'ADD_SECTION'` could be extracted to constants for typo-safety
-- **No React error boundary** — any component crash whitescreens the entire app
+- **No undo/redo** - state changes are immediate with no history stack
+- **No user-created templates** - `TemplatePanel` shows built-in templates but "Save as Template" is not implemented
+- **No export/import of project data** - all data is in IndexedDB with no JSON export (could add a download button)
+- **No section content search** - no way to search across sections/projects
+- **Collapse state doesn't persist** - whether a section is collapsed is UI-only state, not saved to IndexedDB
+- **`useAutoSave` over-broad dependency** - watches entire `state.projects` array; could be narrowed to watch only the active project
+- **Action type strings are bare strings** - reducer action types like `'ADD_SECTION'` could be extracted to constants for typo-safety
+- **No React error boundary** - any component crash whitescreens the entire app
 
 ---
 
@@ -241,7 +249,7 @@ The `projects` store holds the entire project tree (project → prompts → sect
 ### Adding a New Reducer Action
 
 1. Add the case to the `reducer` function in `ProjectContext.jsx`
-2. If the action modifies project data, the `useAutoSave` hook will automatically persist the change — no manual save needed in components
+2. If the action modifies project data, the `useAutoSave` hook will automatically persist the change - no manual save needed in components
 3. For actions that need immediate persistence (e.g., creating/deleting projects), add a `useCallback` method that calls `dispatch()` and then `saveProject()` directly
 4. Expose the method in the `<ProjectContext.Provider value={...}>` object
 
