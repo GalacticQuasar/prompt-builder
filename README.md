@@ -73,7 +73,7 @@ src/
 │   └── ProjectContext.jsx      # All app state (useReducer), actions, side effects
 │
 ├── db/
-│   └── index.js               # IndexedDB init, CRUD, localStorage migration
+│   └── index.js               # IndexedDB init, CRUD
 │
 ├── utils/
 │   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, getSortedSections, truncateText
@@ -150,7 +150,6 @@ src/
 - Components dispatch reducer actions; the hook watches `state.projects` and persists the active project
 - Some context functions (`createNewProject`, `createProjectFromTemplate`, `deleteProjectById`, `renameProject`) call `saveProject` directly for immediate persistence
 - No manual save button needed
-- On first load, detects `prompt-builder-data` in localStorage (from the V1 app) and imports it as an "Imported (legacy)" project, then removes the key
 
 ### Keyboard Shortcuts
 
@@ -216,20 +215,6 @@ Database: `PromptBuilderDB`, version 1
 | `projects` | `id` | `updatedAt` | All project data including nested prompts/sections |
 
 The `projects` store holds the entire project tree (project → prompts → sections) as a single document. There is no normalization — each project is a self-contained record.
-
----
-
-## Legacy Migration
-
-On app initialization (`App.jsx` → `useEffect`), the `migrateFromLocalStorage()` function checks for a `prompt-builder-data` key in localStorage. If found:
-
-1. Parses the JSON array of plain strings
-2. Creates a project named "Imported (legacy)" with one version (v1)
-3. Each string becomes a section with labels "System Prompt", "Section 2", etc.
-4. Saves to IndexedDB and removes the localStorage key
-5. Returns the project ID so it becomes the active project
-
-This migration only runs once — after the key is removed, it's a no-op.
 
 ---
 

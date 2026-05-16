@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProject, ProjectProvider } from './context/ProjectContext';
-import { initDB, getAllProjects, migrateFromLocalStorage } from './db';
+import { initDB, getAllProjects } from './db';
 import ProjectSidebar from './components/ProjectSidebar';
 import PromptEditor from './components/PromptEditor';
 import { useAutoSave } from './hooks/useAutoSave';
@@ -17,14 +17,13 @@ function AppInner() {
     async function init() {
       try {
         const db = await initDB();
-        const migratedId = await migrateFromLocalStorage(db);
         const projects = await getAllProjects(db);
         dispatch({
           type: 'INIT',
           payload: {
             db,
             projects,
-            activeProjectId: migratedId || (projects.length > 0 ? projects[0].id : null),
+            activeProjectId: projects.length > 0 ? projects[0].id : null,
           },
         });
       } catch (err) {
