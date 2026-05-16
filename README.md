@@ -107,6 +107,7 @@ src/
 - Left sidebar (DaisyUI Drawer) lists all projects sorted by most recently updated
 - **New Project** button creates a project with one prompt v1 containing a single "System Prompt" section
 - **Right-click** a project card for a context menu with **Rename** and **Delete** options
+- **Double-click** the project title in the navbar header to rename inline
 - Delete requires confirmation
 - On mobile (≤768px) the drawer expands to full viewport width
 

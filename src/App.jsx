@@ -7,8 +7,10 @@ import { useAutoSave } from './hooks/useAutoSave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function AppInner() {
-  const { state, dispatch } = useProject();
+  const { state, dispatch, renameProject } = useProject();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleText, setTitleText] = useState('');
 
   useAutoSave();
   useKeyboardShortcuts();
@@ -36,27 +38,62 @@ function AppInner() {
 
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId);
 
+  const startEditingTitle = () => {
+    if (!activeProject) return;
+    setTitleText(activeProject.name);
+    setEditingTitle(true);
+  };
+
+  const finishEditingTitle = () => {
+    setEditingTitle(false);
+    if (titleText.trim() && titleText.trim() !== activeProject.name) {
+      renameProject(activeProject.id, titleText.trim());
+    }
+  };
+
   return (
     <div className="drawer">
       <input id="sidebar-toggle" type="checkbox" className="drawer-toggle" checked={sidebarOpen} onChange={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="drawer-content flex flex-col h-screen">
         <header className="navbar bg-base-200 px-4 border-b border-base-content/10">
-          <div className="flex-1 flex items-center gap-2">
+          <div className="navbar-start">
             <label htmlFor="sidebar-toggle" className="btn btn-ghost btn-sm btn-square drawer-button">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </label>
-            <h1 className="text-lg font-bold">Prompt Builder V2</h1>
           </div>
-          <div className="flex-none">
-            {activeProject && (
-              <span className="text-xs opacity-50">
+          <div className="navbar-center">
+            {activeProject && editingTitle ? (
+              <input
+                type="text"
+                className="input input-sm input-bordered text-xl font-bold text-center w-64"
+                value={titleText}
+                onChange={(e) => setTitleText(e.target.value)}
+                onBlur={finishEditingTitle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') finishEditingTitle();
+                  if (e.key === 'Escape') {
+                    setTitleText(activeProject.name);
+                    setEditingTitle(false);
+                  }
+                }}
+                autoFocus
+              />
+            ) : activeProject ? (
+              <h1
+                className="text-xl font-bold text-primary cursor-pointer select-none"
+                onDoubleClick={startEditingTitle}
+                title="Double-click to rename"
+              >
                 {activeProject.name}
-              </span>
+              </h1>
+            ) : (
+              <h1 className="text-xl font-bold">Prompt Builder V2</h1>
             )}
           </div>
+          <div className="navbar-end" />
         </header>
 
         <main className="flex-1 container mx-auto p-4">
