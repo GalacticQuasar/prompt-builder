@@ -1,4 +1,5 @@
-import { DndContext, closestCenter } from '@dnd-kit/core';
+import { useState } from 'react';
+import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useProject } from '../context/ProjectContext';
@@ -13,9 +14,16 @@ export default function PromptEditor() {
   const { dispatch, getActivePrompt, getActiveProject } = useProject();
   const project = getActiveProject();
   const prompt = getActivePrompt();
+  const [activeId, setActiveId] = useState(null);
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
+    setActiveId(null);
+
     if (!over || active.id === over.id || !prompt || !project) return;
 
     const oldIndex = prompt.sections.findIndex((s) => s.id === active.id);
@@ -29,6 +37,10 @@ export default function PromptEditor() {
       type: 'REORDER_SECTIONS',
       payload: { projectId: project.id, promptId: prompt.id, sections: reordered },
     });
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
   };
 
   const handleCopyAll = async () => {
@@ -74,12 +86,21 @@ export default function PromptEditor() {
       <div className="divider my-0"></div>
 
       <div className="py-4 space-y-3" id="textarea-list">
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
           <SortableContext items={sortedSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             {sortedSections.map((section) => (
-              <SortableSection key={section.id} section={section} promptId={prompt.id} />
+              <SortableSection key={section.id} section={section} promptId={prompt.id} isOverlay={false} />
             ))}
           </SortableContext>
+          <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
+            {activeId ? (
+              <SortableSection
+                section={sortedSections.find((s) => s.id === activeId)}
+                promptId={prompt.id}
+                isOverlay
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
 
         <AddSection />
@@ -88,14 +109,22 @@ export default function PromptEditor() {
   );
 }
 
-function SortableSection({ section, promptId }) {
+function SortableSection({ section, promptId, isOverlay }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
   };
+
+  if (isOverlay) {
+    return (
+      <div className="card bg-base-200 shadow-lg" style={{ width: '100%' }}>
+        <Section section={section} promptId={promptId} />
+      </div>
+    );
+  }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
