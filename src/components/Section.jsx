@@ -128,6 +128,9 @@ export default function Section({ section, promptId }) {
             rows={4}
             value={section.content}
             onChange={(e) => handleChange('content', e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') e.target.blur();
+            }}
             placeholder="Type here..."
             readOnly={section.locked}
           />
