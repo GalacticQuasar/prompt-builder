@@ -33,15 +33,15 @@ npm run lint     # eslint
 | Build | Vite 8 | Dev server, HMR, bundling |
 | Styling | Tailwind CSS 4 + DaisyUI 5 | Utility classes + component library (`dim` theme) |
 | Drag & Drop | @dnd-kit/core + @dnd-kit/sortable | Section reordering |
-| Persistence | IndexedDB via `idb` | Projects, prompts, templates |
+| Persistence | IndexedDB via `idb` | Projects and prompts |
 | PWA | vite-plugin-pwa | Offline support, add-to-homescreen |
-| Token Estimation | js-tiktoken | cl100k_base encoding (GPT-4 compatible) |
+| Token Estimation | `length / 4` heuristic | Quick token count approximation |
 
 ### Data Model
 
 ```
 Project
-├── id: string (crypto.randomUUID)
+├── id: string (generateId())
 ├── name: string
 ├── createdAt: ISO date
 ├── updatedAt: ISO date (auto-updated on any change)
@@ -59,12 +59,6 @@ Section (a single text block within a prompt)
 ├── content: string
 ├── locked: boolean
 └── order: number (for drag-and-drop sorting)
-
-Template (built-in or user-created starter)
-├── id: string
-├── name: string
-├── isBuiltIn: boolean
-└── sections: Section[] (same shape, reusable)
 ```
 
 ### File Structure
@@ -82,25 +76,26 @@ src/
 │   └── index.js               # IndexedDB init, CRUD, localStorage migration
 │
 ├── utils/
-│   ├── helpers.js             # generateId, formatRelativeDate, getNextVersionLabel, truncateText
-│   ├── tokenizer.js           # js-tiktoken cl100k_base wrapper, estimateTokens fallback
-│   ├── clipboard.js           # copyAllSections, copyPromptText
-│   └── templates.js           # 4 built-in templates, createProjectFromTemplate()
+│   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, getSortedSections, truncateText
+│   ├── tokenizer.js            # estimateTokens (char/4 heuristic), formatTokenCount
+│   ├── clipboard.js            # copyAllSections
+│   └── templates.js            # 4 built-in templates, createProjectFromTemplate()
 │
 ├── hooks/
-│   ├── useAutoSave.js         # Debounced 300ms save to IndexedDB on every state change
-│   └── useKeyboardShortcuts.js # Arrow keys (version nav), Cmd+Shift+D (duplicate), Cmd+Shift+C (copy)
+│   ├── useAutoSave.js          # Debounced 300ms save to IndexedDB on state change
+│   └── useKeyboardShortcuts.js # Arrow keys for version nav
 │
 └── components/
-    ├── App.jsx                # (root, re-exports from context)
-    ├── ProjectSidebar.jsx     # Left drawer: project list + templates toggle
-    ├── ProjectList.jsx        # Sorted project cards with select/delete
-    ├── TemplatePanel.jsx      # Built-in templates that create new projects
-    ├── PromptEditor.jsx       # Main editing area: tabs + sections + DnD + copy
-    ├── PromptTabs.jsx         # Version tabs with editable labels, delete, duplicate
-    ├── Section.jsx            # Collapsible/lockable text block with label editing
-    ├── AddSection.jsx         # Preset label buttons + custom label
-    └── TokenCounter.jsx       # Total tokens badge, per-section breakdown on click
+    ├── App.jsx                 # (root, re-exports from context)
+    ├── ProjectSidebar.jsx      # Left drawer: project list + templates toggle
+    ├── ProjectList.jsx         # Sorted project cards with right-click context menu
+    ├── TemplatePanel.jsx       # Built-in templates that create new projects
+    ├── PromptEditor.jsx        # Main editing area: tabs + sections + DnD + copy
+    ├── PromptTabs.jsx          # Version tabs with right-click context menu
+    ├── Section.jsx             # Collapsible/lockable text block with label editing
+    ├── AddSection.jsx          # "+ Add Section" button
+    ├── TokenCounter.jsx        # Total tokens badge, per-section breakdown on click
+    └── ContextMenu.jsx         # Shared right-click context menu (rename/delete)
 ```
 
 ---
@@ -111,7 +106,8 @@ src/
 
 - Left sidebar (DaisyUI Drawer) lists all projects sorted by most recently updated
 - **New Project** button creates a project with one prompt v1 containing a single "System Prompt" section
-- Select a project to edit it; delete with confirmation
+- **Right-click** a project card for a context menu with **Rename** and **Delete** options
+- Delete requires confirmation
 - On mobile (≤768px) the drawer expands to full viewport width
 
 ### Prompt Versions (Iterations)
@@ -119,17 +115,17 @@ src/
 - Each project contains multiple prompt **versions** (v1, v2, v3...)
 - Tabs across the top of the editor show all versions for the active project
 - Navigate between versions with **← / → arrow keys**
-- Labels auto-increment ("v1" → "v2") but are **editable** (double-click)
-- **Duplicate** button (+) or **Cmd/Ctrl+Shift+D** clones all sections into a new version
-- Delete a version tab (×) with confirmation (must have >1 version)
-- Each version can have a different "Copy" button that copies just that version's text
+- Labels auto-increment ("v1" → "v2") but are **editable via right-click context menu**
+- **Duplicate** button (+) clones all sections into a new version
+- **Right-click** a tab for a context menu with **Rename** and **Delete** options (delete requires >1 version, no confirmation)
+- **Copy All** button copies all sections of the current version
 
 ### Sections
 
 - Each prompt version contains ordered **sections** (System Prompt, Context, Instructions, etc.)
-- **Add Section** bar at the bottom with presets: System Prompt, Context, Instructions, Examples, Output Format, Custom
+- **Add Section** button at the bottom creates a new section with an auto-incremented label
 - Each section has:
-  - **Editable label** — click the label text to rename
+  - **Editable label** — click the label text to rename (Escape to cancel)
   - **Lock toggle** (🔒/🔓) — makes textarea `readonly` to prevent accidental edits
   - **Collapse toggle** — long content shows first 2 lines → `...` → last 2 lines. Click to expand.
   - **Delete** button (×)
@@ -138,9 +134,9 @@ src/
 
 ### Token Counter
 
-- Header shows total token count for the active version using `js-tiktoken` (cl100k_base encoding)
+- Header shows estimated token count for the active version using a `length / 4` heuristic
 - Click the badge to see a per-section breakdown
-- Falls back to `length / 4` estimation if tiktoken fails to load
+- Token estimates are approximate (1 token ≈ 4 characters)
 
 ### Templates
 
@@ -150,7 +146,9 @@ src/
 
 ### Auto-Save
 
-- Every state change triggers a **300ms debounced save** to IndexedDB
+- Every state change triggers a **300ms debounced save** to IndexedDB via the `useAutoSave` hook
+- Components dispatch reducer actions; the hook watches `state.projects` and persists the active project
+- Some context functions (`createNewProject`, `createProjectFromTemplate`, `deleteProjectById`, `renameProject`) call `saveProject` directly for immediate persistence
 - No manual save button needed
 - On first load, detects `prompt-builder-data` in localStorage (from the V1 app) and imports it as an "Imported (legacy)" project, then removes the key
 
@@ -159,8 +157,6 @@ src/
 | Shortcut | Action |
 |---|---|
 | `←` / `→` | Navigate between prompt versions |
-| `Cmd/Ctrl+Shift+D` | Duplicate current version |
-| `Cmd/Ctrl+Shift+C` | Copy all sections of current version |
 
 ### PWA
 
@@ -173,27 +169,26 @@ src/
 
 ## State Management
 
-All state lives in `ProjectContext.jsx` using `useReducer`:
+All state lives in `ProjectContext.jsx` via `useReducer`. Components dispatch actions; the `useAutoSave` hook handles persistence. Context functions that need immediate saves call `saveProject` directly.
 
 ### Reducer Actions
 
-| Action | Payload | Description |
+| Action | Payload | Notes |
 |---|---|---|
 | `INIT` | `{ db, projects, activeProjectId }` | Bootstrap from IndexedDB |
-| `SET_ACTIVE_PROJECT` | `projectId` | Switch active project, reset prompt index |
-| `SET_ACTIVE_PROMPT_INDEX` | `index` | Switch active version tab |
-| `ADD_PROJECT` | `project` | Create new project |
-| `DELETE_PROJECT` | `id` | Remove project |
-| `UPDATE_PROJECT` | `{ id, ...fields }` | Update project fields (e.g. rename) |
-| `ADD_PROMPT` | `{ projectId, prompt }` | Add a version to a project |
-| `UPDATE_PROMPT` | `{ projectId, promptId, updates }` | Update version (e.g. rename) |
-| `DELETE_PROMPT` | `{ projectId, promptId }` | Remove a version |
-| `ADD_SECTION` | `{ projectId, promptId, section }` | Add section to a version |
-| `UPDATE_SECTION` | `{ projectId, promptId, sectionId, updates }` | Update section content/label/lock |
-| `DELETE_SECTION` | `{ projectId, promptId, sectionId }` | Remove a section |
-| `REORDER_SECTIONS` | `{ projectId, promptId, sections }` | Reorder sections after drag |
+| `SET_ACTIVE_PROJECT` | `projectId` | Resets `activePromptIndex` to 0 |
+| `SET_ACTIVE_PROMPT_INDEX` | `index` | |
 | `SET_PROJECTS` | `projects[]` | Bulk replace projects list |
-| `SAVING_DONE` | — | Clear saving indicator |
+| `ADD_PROJECT` | `project` object | |
+| `DELETE_PROJECT` | `projectId` | |
+| `UPDATE_PROJECT` | full project object | Used for rename |
+| `ADD_PROMPT` | `{ projectId, prompt }` | |
+| `UPDATE_PROMPT` | `{ projectId, promptId, updates }` | |
+| `DELETE_PROMPT` | `{ projectId, promptId }` | Conditionally adjusts `activePromptIndex` |
+| `ADD_SECTION` | `{ projectId, promptId, section }` | |
+| `UPDATE_SECTION` | `{ projectId, promptId, sectionId, updates }` | |
+| `DELETE_SECTION` | `{ projectId, promptId, sectionId }` | Re-indexes `order` on remaining sections |
+| `REORDER_SECTIONS` | `{ projectId, promptId, sections }` | Sections array with updated `order` |
 
 ### Exposed Context Methods
 
@@ -204,13 +199,11 @@ Available via `useProject()` hook:
 | `createNewProject(name?)` | Create project with v1 + default section |
 | `createProjectFromTemplate(template)` | Create project from template object |
 | `duplicateCurrentPrompt()` | Clone current version into new version |
-| `deleteCurrentPrompt()` | Delete current version tab |
+| `deletePromptById(promptId)` | Delete a prompt version by explicit ID |
 | `deleteProjectById(id)` | Delete a project |
 | `renameProject(id, name)` | Rename a project |
-| `autoSave(project)` | Debounced 300ms save to IndexedDB |
 | `getActiveProject()` | Returns currently selected project object |
 | `getActivePrompt()` | Returns currently selected prompt version object |
-| `dispatchAndSave(action)` | Dispatch reducer action then auto-save |
 
 ---
 
@@ -221,7 +214,6 @@ Database: `PromptBuilderDB`, version 1
 | Object Store | Key Path | Indexes | Description |
 |---|---|---|---|
 | `projects` | `id` | `updatedAt` | All project data including nested prompts/sections |
-| `templates` | `id` | `name` (unique) | User-created templates |
 
 The `projects` store holds the entire project tree (project → prompts → sections) as a single document. There is no normalization — each project is a self-contained record.
 
@@ -244,13 +236,14 @@ This migration only runs once — after the key is removed, it's a no-op.
 ## Known Limitations & TODO
 
 - **No undo/redo** — state changes are immediate with no history stack
-- **No user-created templates yet** — `TemplatePanel` shows built-in templates but the "Save as Template" action is not wired up (the `templates` object store in IndexedDB is ready for it)
-- **Token counter uses fallback estimation** — `js-tiktoken` loads asynchronously; until it loads, `length / 4` is used as a rough estimate
+- **No user-created templates** — `TemplatePanel` shows built-in templates but "Save as Template" is not implemented
 - **No export/import of project data** — all data is in IndexedDB with no JSON export (could add a download button)
-- **No keyboard shortcut help tooltip** — shortcuts are documented here but not discoverable in the UI
 - **No section content search** — no way to search across sections/projects
-- **Project rename** — `renameProject()` exists in context but isn't exposed in the UI yet (only labels for prompt versions are editable)
 - **Collapse state doesn't persist** — whether a section is collapsed is UI-only state, not saved to IndexedDB
+- **`useAutoSave` over-broad dependency** — watches entire `state.projects` array; could be narrowed to watch only the active project
+- **Action type strings are bare strings** — reducer action types like `'ADD_SECTION'` could be extracted to constants for typo-safety
+- **No React error boundary** — any component crash whitescreens the entire app
+- **`confirm()` for project delete** — blocking and inaccessible; should use a modal dialog
 
 ---
 
@@ -259,8 +252,9 @@ This migration only runs once — after the key is removed, it's a no-op.
 ### Adding a New Reducer Action
 
 1. Add the case to the `reducer` function in `ProjectContext.jsx`
-2. If the action modifies project data, add a corresponding `useCallback` method that calls `dispatch()` and then `saveProject()` for persistence
-3. Expose the method in the `<ProjectContext.Provider value={...}>` object
+2. If the action modifies project data, the `useAutoSave` hook will automatically persist the change — no manual save needed in components
+3. For actions that need immediate persistence (e.g., creating/deleting projects), add a `useCallback` method that calls `dispatch()` and then `saveProject()` directly
+4. Expose the method in the `<ProjectContext.Provider value={...}>` object
 
 ### Adding a New Built-in Template
 
