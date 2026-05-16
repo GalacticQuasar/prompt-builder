@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'favicon-96x96.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Prompt Builder V2',
-        short_name: 'PB-v2',
+        name: 'Prompt Builder V3',
+        short_name: 'PB-v3',
         description: 'Build and manage LLM prompts with versions and templates',
         theme_color: '#2a303c',
         background_color: '#2a303c',

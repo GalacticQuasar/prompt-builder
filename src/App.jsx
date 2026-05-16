@@ -91,7 +91,7 @@ function AppInner() {
                 {activeProject.name}
               </h1>
             ) : (
-              <h1 className="text-xl font-bold">Prompt Builder V2</h1>
+              <h1 className="text-xl font-bold">Prompt Builder V3</h1>
             )}
           </div>
           <div className="navbar-end" />

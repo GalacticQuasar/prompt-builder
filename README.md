@@ -1,4 +1,4 @@
-# Prompt Builder V2
+# Prompt Builder V3
 
 A progressive web app for building, versioning, and managing LLM prompts. Organize your prompts into projects with iterative versions, drag-and-drop sections, lock content from accidental edits, estimate token counts, and one-click copy — all stored locally in your browser.
 
