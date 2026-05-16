@@ -18,7 +18,7 @@ function ProjectCard({ project, isActive, onSelect, onRename, onDelete }) {
   if (editing) {
     return (
       <div
-        className={`card shadow-sm ${
+        className={`card shadow-sm rounded-lg ${
           isActive ? 'bg-primary text-primary-content' : 'bg-base-100'
         }`}
       >
@@ -67,7 +67,7 @@ function ProjectCard({ project, isActive, onSelect, onRename, onDelete }) {
   return (
     <>
       <div
-        className={`card shadow-sm cursor-pointer transition-colors ${
+        className={`card shadow-sm cursor-pointer transition-colors rounded-lg ${
           isActive
             ? 'bg-primary text-primary-content'
             : 'bg-base-100 hover:bg-base-300/50'
@@ -130,7 +130,7 @@ export default function ProjectList() {
 
   return (
     <>
-      <div className="space-y-1">
+      <div className="space-y-2">
         {sorted.map((project) => (
           <ProjectCard
             key={project.id}
