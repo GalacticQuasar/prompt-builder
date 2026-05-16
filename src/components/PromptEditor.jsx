@@ -7,6 +7,7 @@ import Section from './Section';
 import AddSection from './AddSection';
 import PromptTabs from './PromptTabs';
 import TokenCounter from './TokenCounter';
+import EmptyState from './EmptyState';
 import { copyAllSections } from '../utils/clipboard';
 import { getSortedSections } from '../utils/helpers';
 
@@ -70,17 +71,7 @@ export default function PromptEditor() {
   };
 
   if (!project || !prompt) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-center opacity-50 min-h-[calc(100vh-4rem-2rem)]">
-        <div>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          <p className="text-lg">Select or create a project</p>
-          <p className="text-sm mt-1">Use the sidebar to get started</p>
-        </div>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   const sortedSections = getSortedSections(prompt.sections);
