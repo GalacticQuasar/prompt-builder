@@ -10,11 +10,28 @@ import TokenCounter from './TokenCounter';
 import { copyAllSections } from '../utils/clipboard';
 import { getSortedSections } from '../utils/helpers';
 
+const COPY_MODES = [
+  { value: 'plain', label: 'Plain' },
+  { value: 'labeled', label: 'Labeled' },
+];
+
 export default function PromptEditor() {
   const { dispatch, getActivePrompt, getActiveProject } = useProject();
   const project = getActiveProject();
   const prompt = getActivePrompt();
   const [activeId, setActiveId] = useState(null);
+  const [copyMode, setCopyMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('copyMode');
+      return COPY_MODES.some((m) => m.value === saved) ? saved : 'plain';
+    } catch {
+      return 'plain';
+    }
+  });
+  const handleChangeCopyMode = (mode) => {
+    setCopyMode(mode);
+    try { localStorage.setItem('copyMode', mode); } catch { /* ignored */ }
+  };
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
@@ -46,7 +63,7 @@ export default function PromptEditor() {
   const handleCopyAll = async () => {
     if (!prompt) return;
     try {
-      await copyAllSections(prompt.sections);
+      await copyAllSections(prompt.sections, copyMode);
     } catch (err) {
       console.error('Copy failed:', err);
     }
@@ -72,15 +89,34 @@ export default function PromptEditor() {
     <div className="flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <PromptTabs />
-        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
           <TokenCounter />
-          <button className="btn btn-sm btn-accent" onClick={handleCopyAll} title="Copy all sections (Cmd+Shift+C)">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H7m14 0l-3-3m0 0l3-3" />
-            </svg>
-            Copy All
-          </button>
-        </div>
+          <div className="join">
+            <button className="btn btn-sm btn-accent join-item" onClick={handleCopyAll} title="Copy all sections (Cmd+Shift+C)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/>
+              </svg>
+              Copy All
+            </button>
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-sm btn-accent join-item px-2" title="Copy aggregation mode">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <ul tabIndex={0} className="dropdown-content menu bg-base-200 rounded-box z-50 p-2 shadow text-sm">
+                {COPY_MODES.map((m) => (
+                  <li key={m.value}>
+                    <button className={copyMode === m.value ? 'active' : ''} onClick={() => handleChangeCopyMode(m.value)}>
+                      <span className="w-4 text-center">{copyMode === m.value ? '✓' : ''}</span>
+                      {m.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          </div>
       </div>
 
       <div className="divider my-0"></div>

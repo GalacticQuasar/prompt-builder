@@ -78,7 +78,7 @@ src/
 ├── utils/
 │   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, getSortedSections, truncateText
 │   ├── tokenizer.js            # estimateTokens (char/4 heuristic), formatTokenCount
-│   ├── clipboard.js            # copyAllSections
+│   ├── clipboard.js            # copyAllSections (plain or labeled mode)
 │   └── templates.js            # 4 built-in templates, createProjectFromTemplate()
 │
 ├── hooks/
@@ -120,7 +120,10 @@ src/
 - Labels auto-increment ("v1" → "v2") but are **editable via right-click context menu**
 - **Duplicate** button (+) clones all sections into a new version
 - **Right-click** a tab for a context menu with **Rename** and **Delete** options (delete requires >1 version, no confirmation)
-- **Copy All** button copies all sections of the current version
+- **Copy All** button copies all sections of the current version with a choice of aggregation mode:
+  - **Plain** — sections joined by `\n\n` (default)
+  - **Labeled** — each section wrapped in `<Label>...</Label>` tags
+- The copy mode persists across sessions via `localStorage`
 
 ### Sections
 
