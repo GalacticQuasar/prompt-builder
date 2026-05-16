@@ -20,6 +20,7 @@ function AppInner() {
       try {
         const db = await initDB();
         const projects = await getAllProjects(db);
+        projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         dispatch({
           type: 'INIT',
           payload: {
