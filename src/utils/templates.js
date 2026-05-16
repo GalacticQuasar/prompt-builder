@@ -6,7 +6,7 @@ const BUILTIN_TEMPLATES = [
     name: 'General Assistant',
     isBuiltIn: true,
     sections: [
-      { id: 'tpl-ga-1', label: 'System Prompt', content: 'You are a helpful, harmless, and honest AI assistant. You provide clear, accurate, and well-structured responses. When you are uncertain, you say so.', locked: false, order: 0 },
+      { id: 'tpl-ga-1', label: 'System Prompt', content: 'You are a helpful honest AI assistant. You provide clear, accurate, and well-structured responses. When you are uncertain, you say so.', locked: false, order: 0 },
       { id: 'tpl-ga-2', label: 'Context', content: '', locked: false, order: 1 },
       { id: 'tpl-ga-3', label: 'Instructions', content: '', locked: false, order: 2 },
     ],
