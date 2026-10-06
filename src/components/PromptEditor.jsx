@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -15,6 +15,9 @@ const COPY_MODES = [
   { value: 'plain', label: 'Plain' },
   { value: 'labeled', label: 'Labeled' },
 ];
+
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
+const COPY_SHORTCUT_LABEL = IS_MAC ? 'Cmd+Shift+C' : 'Ctrl+Shift+C';
 
 export default function PromptEditor() {
   const { dispatch, getActivePrompt, getActiveProject } = useProject();
@@ -61,14 +64,38 @@ export default function PromptEditor() {
     setActiveId(null);
   };
 
-  const handleCopyAll = async () => {
+  const [copyStatus, setCopyStatus] = useState(null);
+  const copyStatusTimeoutRef = useRef(null);
+
+  const showCopyStatus = (status) => {
+    setCopyStatus(status);
+    clearTimeout(copyStatusTimeoutRef.current);
+    copyStatusTimeoutRef.current = setTimeout(() => setCopyStatus(null), 1500);
+  };
+
+  useEffect(() => () => clearTimeout(copyStatusTimeoutRef.current), []);
+
+  const handleCopyAll = useCallback(async () => {
     if (!prompt) return;
     try {
       await copyAllSections(prompt.sections, copyMode);
+      showCopyStatus('copied');
     } catch (err) {
       console.error('Copy failed:', err);
+      showCopyStatus('failed');
     }
-  };
+  }, [prompt, copyMode]);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        handleCopyAll();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleCopyAll]);
 
   if (!project || !prompt) {
     return <EmptyState />;
@@ -83,11 +110,15 @@ export default function PromptEditor() {
           <div className="flex items-center gap-2">
           <TokenCounter />
           <div className="join">
-            <button className="btn btn-sm btn-accent join-item" onClick={handleCopyAll} title="Copy all sections (Cmd+Shift+C)">
+            <button
+              className={`btn btn-sm join-item ${copyStatus === 'failed' ? 'btn-error' : 'btn-accent'}`}
+              onClick={handleCopyAll}
+              title={`Copy all sections (${COPY_SHORTCUT_LABEL})`}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/>
               </svg>
-              Copy All
+              {copyStatus === 'copied' ? 'Copied!' : copyStatus === 'failed' ? 'Copy failed' : 'Copy All'}
             </button>
             <div className="dropdown dropdown-end">
               <div tabIndex={0} role="button" className="btn btn-sm btn-accent join-item px-2" title="Copy aggregation mode">
