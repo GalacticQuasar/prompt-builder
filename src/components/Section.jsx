@@ -26,7 +26,7 @@ export default function Section({ section, promptId }) {
   };
 
   const handleDelete = () => {
-    if (!project) return;
+    if (!project || section.locked) return;
     dispatch({
       type: 'DELETE_SECTION',
       payload: { projectId: project.id, promptId, sectionId: section.id },
@@ -63,9 +63,13 @@ export default function Section({ section, promptId }) {
               />
             ) : (
               <span
-                className="font-semibold text-sm cursor-pointer truncate"
-                onClick={() => setEditingLabel(true)}
-                title="Click to rename"
+                className={`font-semibold text-sm truncate ${section.locked ? '' : 'cursor-pointer'}`}
+                onClick={() => {
+                  if (section.locked) return;
+                  setLabelValue(section.label);
+                  setEditingLabel(true);
+                }}
+                title={section.locked ? 'Unlock to rename' : 'Click to rename'}
               >
                 {section.label || 'Untitled'}
               </span>
@@ -104,7 +108,8 @@ export default function Section({ section, promptId }) {
             <button
               className="btn btn-xs btn-ghost text-error"
               onClick={handleDelete}
-              title="Delete section"
+              disabled={section.locked}
+              title={section.locked ? 'Unlock to delete' : 'Delete section'}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
