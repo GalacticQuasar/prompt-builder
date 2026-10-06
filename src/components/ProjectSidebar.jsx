@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import ProjectList from './ProjectList';
 import TemplatePanel from './TemplatePanel';
+import { useConfirmSectionDelete, setConfirmSectionDelete } from '../hooks/useConfirmSectionDelete';
 
 export default function ProjectSidebar({ onClose }) {
   const { createNewProject } = useProject();
   const [showTemplates, setShowTemplates] = useState(false);
+  const confirmSectionDelete = useConfirmSectionDelete();
 
   const handleNewProject = () => {
     createNewProject();
@@ -50,6 +52,18 @@ export default function ProjectSidebar({ onClose }) {
         </button>
         {showTemplates && <TemplatePanel onClose={onClose} />}
       </div>
+
+      <div className="divider my-2"></div>
+
+      <label className="label cursor-pointer justify-between px-3 text-sm">
+        Confirm section deletes
+        <input
+          type="checkbox"
+          className="toggle toggle-sm toggle-primary"
+          checked={confirmSectionDelete}
+          onChange={(e) => setConfirmSectionDelete(e.target.checked)}
+        />
+      </label>
     </div>
   );
 }

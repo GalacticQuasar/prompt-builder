@@ -1,8 +1,9 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function ConfirmModal({ open, title, message, confirmLabel = 'Delete', onConfirm, onCancel }) {
+export default function ConfirmModal({ open, title, message, confirmLabel = 'Delete', showDontAskAgain = false, onConfirm, onCancel }) {
   const dialogRef = useRef(null);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -15,11 +16,14 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
   }, [open]);
 
   const handleCancel = () => {
+    setDontAskAgain(false);
     onCancel();
   };
 
   const handleConfirm = () => {
-    onConfirm();
+    const skipNextTime = dontAskAgain;
+    setDontAskAgain(false);
+    onConfirm({ dontAskAgain: skipNextTime });
   };
 
   const handleBackdropClick = (e) => {
@@ -30,7 +34,7 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
 
   const handleCancelEvent = (e) => {
     e.preventDefault();
-    onCancel();
+    handleCancel();
   };
 
   return createPortal(
@@ -43,6 +47,17 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Del
       <div className="modal-box">
         <h3 className="text-lg font-bold">{title}</h3>
         <p className="py-4">{message}</p>
+        {showDontAskAgain && (
+          <label className="label cursor-pointer justify-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="checkbox checkbox-sm"
+              checked={dontAskAgain}
+              onChange={(e) => setDontAskAgain(e.target.checked)}
+            />
+            Don't ask again
+          </label>
+        )}
         <div className="modal-action">
           <button className="btn btn-sm" onClick={handleCancel}>Cancel</button>
           <button className="btn btn-sm btn-error" onClick={handleConfirm}>{confirmLabel}</button>

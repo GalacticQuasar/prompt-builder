@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { truncateText } from '../utils/helpers';
 import { estimateTokens } from '../utils/tokenizer';
+import { useConfirmSectionDelete, setConfirmSectionDelete } from '../hooks/useConfirmSectionDelete';
+import ConfirmModal from './ConfirmModal';
 
 export default function Section({ section, promptId }) {
   const { dispatch, getActiveProject } = useProject();
@@ -9,6 +11,8 @@ export default function Section({ section, promptId }) {
   const [collapsed, setCollapsed] = useState(false);
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(section.label);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const confirmDelete = useConfirmSectionDelete();
 
   const truncated = truncateText(section.content);
   const shouldCollapse = truncated && collapsed;
@@ -31,6 +35,15 @@ export default function Section({ section, promptId }) {
       type: 'DELETE_SECTION',
       payload: { projectId: project.id, promptId, sectionId: section.id },
     });
+  };
+
+  const requestDelete = () => {
+    if (section.locked) return;
+    if (section.content.trim() && confirmDelete) {
+      setConfirmingDelete(true);
+    } else {
+      handleDelete();
+    }
   };
 
   const finishLabelEdit = () => {
@@ -107,7 +120,7 @@ export default function Section({ section, promptId }) {
             </button>
             <button
               className="btn btn-xs btn-ghost text-error"
-              onClick={handleDelete}
+              onClick={requestDelete}
               disabled={section.locked}
               title={section.locked ? 'Unlock to delete' : 'Delete section'}
             >
@@ -141,6 +154,19 @@ export default function Section({ section, promptId }) {
           />
         )}
       </div>
+      <ConfirmModal
+        open={confirmingDelete}
+        title="Delete Section"
+        message={`Are you sure you want to delete "${section.label || 'Untitled'}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        showDontAskAgain
+        onConfirm={({ dontAskAgain }) => {
+          if (dontAskAgain) setConfirmSectionDelete(false);
+          setConfirmingDelete(false);
+          handleDelete();
+        }}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   );
 }
