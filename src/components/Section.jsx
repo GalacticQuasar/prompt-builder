@@ -136,9 +136,9 @@ export default function Section({ section, promptId }) {
             className="text-sm opacity-60 cursor-pointer py-2 px-1"
             onClick={() => setCollapsed(false)}
           >
-            <p>{truncated.first}</p>
+            <p className="whitespace-pre-wrap break-words">{truncated.first}</p>
             <p className="text-center opacity-40">···</p>
-            <p>{truncated.last}</p>
+            <p className="whitespace-pre-wrap break-words">{truncated.last}</p>
           </div>
         ) : (
           <textarea

@@ -195,7 +195,7 @@ function SortableSection({ section, promptId, isOverlay }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Section section={section} promptId={promptId} />
         </div>
       </div>
