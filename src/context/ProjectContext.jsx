@@ -183,9 +183,7 @@ function reducer(state, action) {
                   pr.id === promptId
                     ? {
                         ...pr,
-                        sections: pr.sections
-                          .filter((s) => s.id !== sectionId)
-                          .map((s, i) => ({ ...s, order: i })),
+                        sections: pr.sections.filter((s) => s.id !== sectionId),
                       }
                     : pr
                 ),
@@ -249,7 +247,6 @@ export function ProjectProvider({ children }) {
                 label: 'System Prompt',
                 content: '',
                 locked: false,
-                order: 0,
               },
             ],
             createdAt: new Date().toISOString(),

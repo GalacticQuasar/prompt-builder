@@ -40,7 +40,3 @@ export function truncateText(text, maxLines = 4) {
     totalLines: lines.length,
   };
 }
-
-export function getSortedSections(sections) {
-  return sections.slice().sort((a, b) => a.order - b.order);
-}

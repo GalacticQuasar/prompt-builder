@@ -14,7 +14,6 @@ export default function AddSection() {
       label,
       content: '',
       locked: false,
-      order: prompt.sections.length,
     };
 
     dispatch({

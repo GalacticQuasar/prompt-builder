@@ -12,8 +12,7 @@ export function toTagName(label) {
 }
 
 export function copyAllSections(sections, mode = 'plain') {
-  const sorted = sections.slice().sort((a, b) => a.order - b.order);
-  const nonEmpty = sorted.filter((s) => s.content);
+  const nonEmpty = sections.filter((s) => s.content);
 
   let text;
   if (mode === 'labeled') {

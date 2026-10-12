@@ -57,8 +57,9 @@ Section (a single text block within a prompt)
 ├── id: string
 ├── label: string ("System Prompt", "Context", etc.)
 ├── content: string
-├── locked: boolean
-└── order: number (for drag-and-drop sorting)
+└── locked: boolean
+
+Sections are stored in display order; drag-and-drop reorders the array.
 ```
 
 ### File Structure
@@ -76,7 +77,7 @@ src/
 │   └── index.js               # IndexedDB init, CRUD
 │
 ├── utils/
-│   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, getSortedSections, truncateText
+│   ├── helpers.js              # generateId, formatRelativeDate, getNextVersionLabel, truncateText
 │   ├── tokenizer.js            # estimateTokens (char/4 heuristic), formatTokenCount
 │   ├── clipboard.js            # copyAllSections (plain or labeled mode)
 │   └── templates.js            # 4 built-in templates, getBuiltInTemplates(), createProjectFromTemplate()
@@ -197,8 +198,8 @@ All state lives in `ProjectContext.jsx` via `useReducer`. Components dispatch ac
 | `DELETE_PROMPT` | `{ projectId, promptId }` | Conditionally adjusts `activePromptIndex` |
 | `ADD_SECTION` | `{ projectId, promptId, section }` | |
 | `UPDATE_SECTION` | `{ projectId, promptId, sectionId, updates }` | |
-| `DELETE_SECTION` | `{ projectId, promptId, sectionId }` | Re-indexes `order` on remaining sections |
-| `REORDER_SECTIONS` | `{ projectId, promptId, sections }` | Sections array with updated `order` |
+| `DELETE_SECTION` | `{ projectId, promptId, sectionId }` | |
+| `REORDER_SECTIONS` | `{ projectId, promptId, sections }` | Sections array in the new order |
 
 ### Exposed Context Methods
 
@@ -256,7 +257,7 @@ The `projects` store holds the entire project tree (project → prompts → sect
 ### Adding a New Built-in Template
 
 1. Add an entry to the `BUILTIN_TEMPLATES` array in `src/utils/templates.js`
-2. Each template needs: `id` (prefix `tpl-`), `name`, `isBuiltIn: true`, and `sections` array with `id`, `label`, `content`, `locked`, `order`
+2. Each template needs: `id` (prefix `tpl-`), `name`, `isBuiltIn: true`, and `sections` array (in display order) with `id`, `label`, `content`, `locked`
 
 ### Styling Conventions
 

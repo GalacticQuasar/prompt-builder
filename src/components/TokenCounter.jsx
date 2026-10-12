@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { estimateTokens, formatTokenCount } from '../utils/tokenizer';
-import { getSortedSections } from '../utils/helpers';
 
 export default function TokenCounter() {
   const { getActivePrompt } = useProject();
@@ -27,7 +26,7 @@ export default function TokenCounter() {
 
   if (!prompt) return null;
 
-  const sections = getSortedSections(prompt.sections);
+  const { sections } = prompt;
   const totalTokens = sections.reduce((sum, s) => sum + estimateTokens(s.content), 0);
 
   return (

@@ -9,7 +9,6 @@ import PromptTabs from './PromptTabs';
 import TokenCounter from './TokenCounter';
 import EmptyState from './EmptyState';
 import { copyAllSections } from '../utils/clipboard';
-import { getSortedSections } from '../utils/helpers';
 
 const COPY_MODES = [
   { value: 'plain', label: 'Plain' },
@@ -49,10 +48,7 @@ export default function PromptEditor() {
 
     const oldIndex = prompt.sections.findIndex((s) => s.id === active.id);
     const newIndex = prompt.sections.findIndex((s) => s.id === over.id);
-    const reordered = arrayMove(prompt.sections, oldIndex, newIndex).map((s, i) => ({
-      ...s,
-      order: i,
-    }));
+    const reordered = arrayMove(prompt.sections, oldIndex, newIndex);
 
     dispatch({
       type: 'REORDER_SECTIONS',
@@ -101,7 +97,7 @@ export default function PromptEditor() {
     return <EmptyState />;
   }
 
-  const sortedSections = getSortedSections(prompt.sections);
+  const { sections } = prompt;
 
   return (
     <div className="flex flex-col">
@@ -145,15 +141,15 @@ export default function PromptEditor() {
 
       <div className="py-4 space-y-3" id="textarea-list">
         <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-          <SortableContext items={sortedSections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-            {sortedSections.map((section) => (
+          <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            {sections.map((section) => (
               <SortableSection key={section.id} section={section} promptId={prompt.id} isOverlay={false} />
             ))}
           </SortableContext>
           <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
             {activeId ? (
               <SortableSection
-                section={sortedSections.find((s) => s.id === activeId)}
+                section={sections.find((s) => s.id === activeId)}
                 promptId={prompt.id}
                 isOverlay
               />

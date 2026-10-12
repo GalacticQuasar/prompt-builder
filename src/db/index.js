@@ -15,8 +15,32 @@ export async function initDB() {
   });
 }
 
+// Older data stored each section's position in an `order` field. Sections are
+// now kept in array order, so sort by `order` once on load and drop it.
+function normalizeSections(sections) {
+  return sections
+    .map((section, index) => ({ section, position: section.order ?? index }))
+    .sort((a, b) => a.position - b.position)
+    .map(({ section }) => {
+      const normalized = { ...section };
+      delete normalized.order;
+      return normalized;
+    });
+}
+
+function normalizeProject(project) {
+  return {
+    ...project,
+    prompts: project.prompts.map((prompt) => ({
+      ...prompt,
+      sections: normalizeSections(prompt.sections),
+    })),
+  };
+}
+
 export async function getAllProjects(db) {
-  return db.getAll(PROJECT_STORE);
+  const projects = await db.getAll(PROJECT_STORE);
+  return projects.map(normalizeProject);
 }
 
 export async function saveProject(db, project) {
