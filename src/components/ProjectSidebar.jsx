@@ -3,9 +3,12 @@ import { useProject } from '../context/ProjectContext';
 import ProjectList from './ProjectList';
 import TemplatePanel from './TemplatePanel';
 import { useConfirmSectionDelete, setConfirmSectionDelete } from '../hooks/useConfirmSectionDelete';
+import { useImportBackup } from '../hooks/useImportBackup';
+import { downloadBackup } from '../utils/backup';
 
 export default function ProjectSidebar({ onClose }) {
-  const { createNewProject } = useProject();
+  const { state, createNewProject } = useProject();
+  const { openPicker, inputProps, status: importStatus } = useImportBackup();
   const [showTemplates, setShowTemplates] = useState(false);
   const confirmSectionDelete = useConfirmSectionDelete();
 
@@ -54,6 +57,31 @@ export default function ProjectSidebar({ onClose }) {
       </div>
 
       <div className="divider my-2"></div>
+
+      <div className="px-3 pb-2 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span>Backup</span>
+          <div className="flex gap-1">
+            <button
+              className="btn btn-ghost btn-xs"
+              onClick={() => downloadBackup(state.projects)}
+              disabled={state.projects.length === 0}
+              title="Download all projects as a JSON file"
+            >
+              Export
+            </button>
+            <button className="btn btn-ghost btn-xs" onClick={openPicker} title="Add projects from a backup file">
+              Import
+            </button>
+            <input {...inputProps} />
+          </div>
+        </div>
+        {importStatus && (
+          <p className={`text-xs ${importStatus.type === 'error' ? 'text-error' : 'text-success'}`}>
+            {importStatus.message}
+          </p>
+        )}
+      </div>
 
       <label className="label cursor-pointer justify-between px-3 text-sm">
         Confirm section deletes

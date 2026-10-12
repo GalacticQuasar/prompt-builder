@@ -19,6 +19,8 @@ function AppInner() {
     async function init() {
       try {
         const db = await initDB();
+        // Ask the browser not to evict our IndexedDB data under storage pressure.
+        navigator.storage?.persist?.().catch(() => {});
         const projects = await getAllProjects(db);
         projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         dispatch({

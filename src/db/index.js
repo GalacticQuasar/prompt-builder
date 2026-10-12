@@ -28,7 +28,7 @@ function normalizeSections(sections) {
     });
 }
 
-function normalizeProject(project) {
+export function normalizeProject(project) {
   return {
     ...project,
     prompts: project.prompts.map((prompt) => ({

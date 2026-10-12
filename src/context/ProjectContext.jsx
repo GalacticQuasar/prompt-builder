@@ -53,6 +53,16 @@ function reducer(state, action) {
       };
     }
 
+    case 'IMPORT_PROJECTS': {
+      const imported = action.payload;
+      return {
+        ...state,
+        projects: [...imported, ...state.projects],
+        activeProjectId: state.activeProjectId ?? imported[0]?.id ?? null,
+        activePromptIndex: state.activeProjectId ? state.activePromptIndex : 0,
+      };
+    }
+
     case 'DELETE_PROJECT': {
       const id = action.payload;
       const remaining = state.projects.filter((p) => p.id !== id);
@@ -311,6 +321,16 @@ export function ProjectProvider({ children }) {
     [getActiveProject]
   );
 
+  const importProjects = useCallback(
+    async (projects) => {
+      if (state.db) {
+        await Promise.all(projects.map((project) => saveProject(state.db, project)));
+      }
+      dispatch({ type: 'IMPORT_PROJECTS', payload: projects });
+    },
+    [state.db]
+  );
+
   const deleteProjectById = useCallback(
     (id) => {
       dispatch({ type: 'DELETE_PROJECT', payload: id });
@@ -345,6 +365,7 @@ export function ProjectProvider({ children }) {
         createProjectFromTemplate,
         duplicateCurrentPrompt,
         deletePromptById,
+        importProjects,
         deleteProjectById,
         renameProject,
       }}

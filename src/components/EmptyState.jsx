@@ -1,5 +1,6 @@
 import { useProject } from '../context/ProjectContext';
 import { getBuiltInTemplates } from '../utils/templates';
+import { useImportBackup } from '../hooks/useImportBackup';
 
 const FEATURES = [
   {
@@ -61,6 +62,7 @@ const FEATURES = [
 export default function EmptyState() {
   const { createNewProject, createProjectFromTemplate } = useProject();
   const templates = getBuiltInTemplates();
+  const { openPicker, inputProps, status: importStatus } = useImportBackup();
 
   return (
     <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-4rem-2rem)] pt-0 -mt-8">
@@ -118,6 +120,16 @@ export default function EmptyState() {
           </svg>
           New Blank Project
         </button>
+
+        <div>
+          <button className="btn btn-link btn-sm opacity-70" onClick={openPicker}>
+            Import a backup
+          </button>
+          <input {...inputProps} />
+          {importStatus?.type === 'error' && (
+            <p className="text-xs text-error">{importStatus.message}</p>
+          )}
+        </div>
       </div>
     </div>
   );
