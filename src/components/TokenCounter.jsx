@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { estimateTokens, formatTokenCount } from '../utils/tokenizer';
 import { getSortedSections } from '../utils/helpers';
@@ -6,7 +6,24 @@ import { getSortedSections } from '../utils/helpers';
 export default function TokenCounter() {
   const { getActivePrompt } = useProject();
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const ref = useRef(null);
   const prompt = getActivePrompt();
+
+  useEffect(() => {
+    if (!showBreakdown) return;
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setShowBreakdown(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setShowBreakdown(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showBreakdown]);
 
   if (!prompt) return null;
 
@@ -14,7 +31,7 @@ export default function TokenCounter() {
   const totalTokens = sections.reduce((sum, s) => sum + estimateTokens(s.content), 0);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         className="btn btn-ghost btn-sm text-xs"
         onClick={() => setShowBreakdown(!showBreakdown)}
