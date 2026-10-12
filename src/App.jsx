@@ -106,7 +106,7 @@ function AppInner() {
 
       <div className="drawer-side">
         <label htmlFor="sidebar-toggle" aria-label="close sidebar" className="drawer-overlay"></label>
-        <ProjectSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <ProjectSidebar onClose={() => setSidebarOpen(false)} />
       </div>
     </div>
   );
