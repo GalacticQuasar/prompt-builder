@@ -25,7 +25,7 @@ textarea {
 }
 
 @media (max-width: 768px) {
-  .drawer-side aside {
+  .drawer-side > div {
     width: 100vw;
   }
 }
