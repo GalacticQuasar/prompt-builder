@@ -48,7 +48,12 @@ export default function Section({ section, promptId }) {
 
   const finishLabelEdit = () => {
     setEditingLabel(false);
-    handleChange('label', labelValue);
+    const trimmed = labelValue.trim();
+    if (trimmed && trimmed !== section.label) {
+      handleChange('label', trimmed);
+    } else {
+      setLabelValue(section.label);
+    }
   };
 
   const lineCount = section.content ? section.content.split('\n').length : 0;
