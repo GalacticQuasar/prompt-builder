@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useProject } from '../context/ProjectContext';
 import Section from './Section';
@@ -23,6 +23,10 @@ export default function PromptEditor() {
   const project = getActiveProject();
   const prompt = getActivePrompt();
   const [activeId, setActiveId] = useState(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [copyMode, setCopyMode] = useState(() => {
     try {
       const saved = localStorage.getItem('copyMode');
@@ -140,7 +144,7 @@ export default function PromptEditor() {
       <div className="divider my-0"></div>
 
       <div className="py-4 space-y-3" id="textarea-list">
-        <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
           <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             {sections.map((section) => (
               <SortableSection key={section.id} section={section} promptId={prompt.id} isOverlay={false} />
@@ -164,7 +168,7 @@ export default function PromptEditor() {
 }
 
 function SortableSection({ section, promptId, isOverlay }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -181,11 +185,14 @@ function SortableSection({ section, promptId, isOverlay }) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style}>
       <div className="flex gap-2">
         <div
-          className="cursor-grab active:cursor-grabbing flex items-center opacity-30 hover:opacity-70"
+          ref={setActivatorNodeRef}
+          className="cursor-grab active:cursor-grabbing flex items-center rounded opacity-30 hover:opacity-70 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primary"
+          {...attributes}
           {...listeners}
+          aria-label={`Reorder ${section.label || 'Untitled'}`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
