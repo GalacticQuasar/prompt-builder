@@ -11,8 +11,7 @@ export default function TemplatePanel({ onClose }) {
   };
 
   return (
-    <div className="mt-4">
-      <h3 className="text-sm font-semibold mb-2 opacity-70">Templates</h3>
+    <div className="mt-2">
       <div className="space-y-1">
         {builtIn.map((template) => (
           <div
